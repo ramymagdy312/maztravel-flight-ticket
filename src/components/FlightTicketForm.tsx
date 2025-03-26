@@ -1,7 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { Plane, Mail, Calendar, User, MapPin, Clock, Hash, Utensils, Briefcase, Plus, Trash2, DollarSign } from 'lucide-react';
-import { PDFDownloadLink } from '@react-pdf/renderer';
-import TicketPDF from './TicketPDF';
+import React, { useState, useEffect } from "react";
+import {
+  Plane,
+  Mail,
+  Calendar,
+  User,
+  MapPin,
+  Clock,
+  Hash,
+  Utensils,
+  Briefcase,
+  Plus,
+  Trash2,
+  DollarSign,
+} from "lucide-react";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import TicketPDF from "./TicketPDF";
 
 interface Flight {
   from: string;
@@ -30,97 +43,117 @@ interface FlightDetails {
   flights: Flight[];
   grandTotal?: {
     amount: number;
-    currency: 'EGP' | 'USD';
+    currency: "EGP" | "USD";
   };
 }
 
-const AIRLINES = ['Egyptair', 'AirCairo', 'Turkish Airlines'] as const;
-const TICKET_CLASSES = ['Economy', 'Business Class'] as const;
-const CURRENCIES = ['EGP', 'USD'] as const;
+const AIRLINES = ["Egyptair", "AirCairo", "Turkish Airlines"] as const;
+const TICKET_CLASSES = ["Economy", "Business Class"] as const;
+const CURRENCIES = ["EGP", "USD"] as const;
 
 const emptyFlight: Flight = {
-  from: '',
-  to: '',
-  departureDate: '',
-  departureTime: '',
-  arrivalDate: '',
-  arrivalTime: '',
-  flightNumber: '',
-  terminal: '',
-  arrivalTerminal: '',
-  class: 'Economy',
-  airline: 'Egyptair',
-  duration: ''
+  from: "",
+  to: "",
+  departureDate: "",
+  departureTime: "",
+  arrivalDate: "",
+  arrivalTime: "",
+  flightNumber: "",
+  terminal: "",
+  arrivalTerminal: "",
+  class: "Economy",
+  airline: "Egyptair",
+  duration: "",
 };
 
 const FlightTicketForm: React.FC = () => {
   const [flightDetails, setFlightDetails] = useState<FlightDetails>({
-    passengerName: '',
-    email: '',
-    pnr: '',
-    ticketNumber: '',
-    frequentFlyerNo: '',
-    seatNo: '',
-    meals: '',
-    baggage: '2P Cabin: 5-7Kg',
-    flights: [{ ...emptyFlight }]
+    passengerName: "",
+    email: "",
+    pnr: "",
+    ticketNumber: "",
+    frequentFlyerNo: "",
+    seatNo: "",
+    meals: "",
+    baggage: "2P Cabin: 5-7Kg",
+    flights: [{ ...emptyFlight }],
   });
 
   const [showGrandTotal, setShowGrandTotal] = useState(false);
-  const [grandTotalAmount, setGrandTotalAmount] = useState('');
-  const [grandTotalCurrency, setGrandTotalCurrency] = useState<'EGP' | 'USD'>('EGP');
+  const [grandTotalAmount, setGrandTotalAmount] = useState("");
+  const [grandTotalCurrency, setGrandTotalCurrency] = useState<"EGP" | "USD">(
+    "EGP"
+  );
 
   const calculateDuration = (flight: Flight) => {
-    if (flight.departureDate && flight.departureTime && 
-        flight.arrivalDate && flight.arrivalTime) {
-      const departure = new Date(`${flight.departureDate}T${flight.departureTime}`);
+    if (
+      flight.departureDate &&
+      flight.departureTime &&
+      flight.arrivalDate &&
+      flight.arrivalTime
+    ) {
+      const departure = new Date(
+        `${flight.departureDate}T${flight.departureTime}`
+      );
       const arrival = new Date(`${flight.arrivalDate}T${flight.arrivalTime}`);
-      
-      const diffInMinutes = Math.abs(arrival.getTime() - departure.getTime()) / (1000 * 60);
+
+      const diffInMinutes =
+        Math.abs(arrival.getTime() - departure.getTime()) / (1000 * 60);
       const hours = Math.floor(diffInMinutes / 60);
       const minutes = Math.round(diffInMinutes % 60);
-      
+
       return `${hours}h ${minutes}m`;
     }
-    return '';
+    return "";
   };
 
   useEffect(() => {
-    const updatedFlights = flightDetails.flights.map(flight => ({
+    const updatedFlights = flightDetails.flights.map((flight) => ({
       ...flight,
-      duration: calculateDuration(flight)
+      duration: calculateDuration(flight),
     }));
-    
-    setFlightDetails(prev => ({
-      ...prev,
-      flights: updatedFlights
-    }));
-  }, [flightDetails.flights.map(f => `${f.departureDate}${f.departureTime}${f.arrivalDate}${f.arrivalTime}`).join()]);
 
-  const handleFlightChange = (index: number, field: keyof Flight, value: string) => {
+    setFlightDetails((prev) => ({
+      ...prev,
+      flights: updatedFlights,
+    }));
+  }, [
+    flightDetails.flights
+      .map(
+        (f) =>
+          `${f.departureDate}${f.departureTime}${f.arrivalDate}${f.arrivalTime}`
+      )
+      .join(),
+  ]);
+
+  const handleFlightChange = (
+    index: number,
+    field: keyof Flight,
+    value: string
+  ) => {
     const newFlights = [...flightDetails.flights];
     newFlights[index] = {
       ...newFlights[index],
-      [field]: value
+      [field]: value,
     };
-    setFlightDetails(prev => ({
+    setFlightDetails((prev) => ({
       ...prev,
-      flights: newFlights
+      flights: newFlights,
     }));
   };
 
   const addFlight = () => {
-    setFlightDetails(prev => ({
+    setFlightDetails((prev) => ({
       ...prev,
-      flights: [...prev.flights, { ...emptyFlight }]
+      flights: [...prev.flights, { ...emptyFlight }],
     }));
   };
 
   const removeFlight = (index: number) => {
     if (flightDetails.flights.length > 1) {
-      setFlightDetails(prev => ({
+      setFlightDetails((prev) => ({
         ...prev,
-        flights: prev.flights.filter((_, i) => i !== index)
+        flights: prev.flights.filter((_, i) => i !== index),
       }));
     }
   };
@@ -135,7 +168,7 @@ const FlightTicketForm: React.FC = () => {
     if (showGrandTotal && grandTotalAmount) {
       ticketData.grandTotal = {
         amount: parseFloat(grandTotalAmount),
-        currency: grandTotalCurrency
+        currency: grandTotalCurrency,
       };
     }
     return ticketData;
@@ -145,11 +178,13 @@ const FlightTicketForm: React.FC = () => {
     <div className="max-w-4xl w-full bg-white rounded-xl shadow-lg p-8">
       <div className="flex items-center justify-center mb-8">
         <img
-          src="https://maztravel.net/wp-content/uploads/2024/02/maz-travel-logo.png"
+          src="https://maztravel.net/uploads/0000/1/2023/10/29/183461079-112600590954161-273977000443253765-n1.png"
           alt="Maz Travel Logo"
           className="h-16 mr-4"
         />
-        <h2 className="text-2xl font-bold text-gray-800 ml-3">Flight Ticket Details</h2>
+        <h2 className="text-2xl font-bold text-gray-800 ml-3">
+          Flight Ticket Details
+        </h2>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -162,7 +197,12 @@ const FlightTicketForm: React.FC = () => {
             <input
               type="text"
               value={flightDetails.passengerName}
-              onChange={(e) => setFlightDetails({ ...flightDetails, passengerName: e.target.value })}
+              onChange={(e) =>
+                setFlightDetails({
+                  ...flightDetails,
+                  passengerName: e.target.value,
+                })
+              }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
@@ -176,7 +216,9 @@ const FlightTicketForm: React.FC = () => {
             <input
               type="text"
               value={flightDetails.pnr}
-              onChange={(e) => setFlightDetails({ ...flightDetails, pnr: e.target.value })}
+              onChange={(e) =>
+                setFlightDetails({ ...flightDetails, pnr: e.target.value })
+              }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
@@ -190,7 +232,12 @@ const FlightTicketForm: React.FC = () => {
             <input
               type="text"
               value={flightDetails.ticketNumber}
-              onChange={(e) => setFlightDetails({ ...flightDetails, ticketNumber: e.target.value })}
+              onChange={(e) =>
+                setFlightDetails({
+                  ...flightDetails,
+                  ticketNumber: e.target.value,
+                })
+              }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
@@ -204,7 +251,12 @@ const FlightTicketForm: React.FC = () => {
             <input
               type="text"
               value={flightDetails.frequentFlyerNo}
-              onChange={(e) => setFlightDetails({ ...flightDetails, frequentFlyerNo: e.target.value })}
+              onChange={(e) =>
+                setFlightDetails({
+                  ...flightDetails,
+                  frequentFlyerNo: e.target.value,
+                })
+              }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -217,7 +269,9 @@ const FlightTicketForm: React.FC = () => {
             <input
               type="text"
               value={flightDetails.seatNo}
-              onChange={(e) => setFlightDetails({ ...flightDetails, seatNo: e.target.value })}
+              onChange={(e) =>
+                setFlightDetails({ ...flightDetails, seatNo: e.target.value })
+              }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
@@ -231,7 +285,9 @@ const FlightTicketForm: React.FC = () => {
             <input
               type="text"
               value={flightDetails.baggage}
-              onChange={(e) => setFlightDetails({ ...flightDetails, baggage: e.target.value })}
+              onChange={(e) =>
+                setFlightDetails({ ...flightDetails, baggage: e.target.value })
+              }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
@@ -245,7 +301,9 @@ const FlightTicketForm: React.FC = () => {
             <input
               type="email"
               value={flightDetails.email}
-              onChange={(e) => setFlightDetails({ ...flightDetails, email: e.target.value })}
+              onChange={(e) =>
+                setFlightDetails({ ...flightDetails, email: e.target.value })
+              }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
@@ -254,9 +312,14 @@ const FlightTicketForm: React.FC = () => {
 
         <div className="space-y-6">
           {flightDetails.flights.map((flight, index) => (
-            <div key={index} className="border border-gray-200 rounded-lg p-6 space-y-6">
+            <div
+              key={index}
+              className="border border-gray-200 rounded-lg p-6 space-y-6"
+            >
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-800">Flight {index + 1}</h3>
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Flight {index + 1}
+                </h3>
                 {flightDetails.flights.length > 1 && (
                   <button
                     type="button"
@@ -276,7 +339,9 @@ const FlightTicketForm: React.FC = () => {
                   </label>
                   <select
                     value={flight.airline}
-                    onChange={(e) => handleFlightChange(index, 'airline', e.target.value)}
+                    onChange={(e) =>
+                      handleFlightChange(index, "airline", e.target.value)
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   >
@@ -295,7 +360,9 @@ const FlightTicketForm: React.FC = () => {
                   </label>
                   <select
                     value={flight.class}
-                    onChange={(e) => handleFlightChange(index, 'class', e.target.value)}
+                    onChange={(e) =>
+                      handleFlightChange(index, "class", e.target.value)
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   >
@@ -315,7 +382,9 @@ const FlightTicketForm: React.FC = () => {
                   <input
                     type="text"
                     value={flight.from}
-                    onChange={(e) => handleFlightChange(index, 'from', e.target.value)}
+                    onChange={(e) =>
+                      handleFlightChange(index, "from", e.target.value)
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
@@ -329,7 +398,9 @@ const FlightTicketForm: React.FC = () => {
                   <input
                     type="text"
                     value={flight.to}
-                    onChange={(e) => handleFlightChange(index, 'to', e.target.value)}
+                    onChange={(e) =>
+                      handleFlightChange(index, "to", e.target.value)
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
@@ -343,7 +414,9 @@ const FlightTicketForm: React.FC = () => {
                   <input
                     type="date"
                     value={flight.departureDate}
-                    onChange={(e) => handleFlightChange(index, 'departureDate', e.target.value)}
+                    onChange={(e) =>
+                      handleFlightChange(index, "departureDate", e.target.value)
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
@@ -357,7 +430,9 @@ const FlightTicketForm: React.FC = () => {
                   <input
                     type="time"
                     value={flight.departureTime}
-                    onChange={(e) => handleFlightChange(index, 'departureTime', e.target.value)}
+                    onChange={(e) =>
+                      handleFlightChange(index, "departureTime", e.target.value)
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
@@ -371,7 +446,9 @@ const FlightTicketForm: React.FC = () => {
                   <input
                     type="date"
                     value={flight.arrivalDate}
-                    onChange={(e) => handleFlightChange(index, 'arrivalDate', e.target.value)}
+                    onChange={(e) =>
+                      handleFlightChange(index, "arrivalDate", e.target.value)
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
@@ -385,7 +462,9 @@ const FlightTicketForm: React.FC = () => {
                   <input
                     type="time"
                     value={flight.arrivalTime}
-                    onChange={(e) => handleFlightChange(index, 'arrivalTime', e.target.value)}
+                    onChange={(e) =>
+                      handleFlightChange(index, "arrivalTime", e.target.value)
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
@@ -399,7 +478,9 @@ const FlightTicketForm: React.FC = () => {
                   <input
                     type="text"
                     value={flight.flightNumber}
-                    onChange={(e) => handleFlightChange(index, 'flightNumber', e.target.value)}
+                    onChange={(e) =>
+                      handleFlightChange(index, "flightNumber", e.target.value)
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
@@ -468,7 +549,9 @@ const FlightTicketForm: React.FC = () => {
                 </label>
                 <select
                   value={grandTotalCurrency}
-                  onChange={(e) => setGrandTotalCurrency(e.target.value as 'EGP' | 'USD')}
+                  onChange={(e) =>
+                    setGrandTotalCurrency(e.target.value as "EGP" | "USD")
+                  }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required={showGrandTotal}
                 >
