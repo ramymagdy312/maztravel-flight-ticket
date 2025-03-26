@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 
 const styles = StyleSheet.create({
   page: {
@@ -14,6 +14,13 @@ const styles = StyleSheet.create({
     borderBottom: 1,
     borderBottomColor: '#1e40af',
     paddingBottom: 10,
+  },
+  headerContent: {
+    flex: 1,
+  },
+  logo: {
+    width: 100,
+    marginBottom: 10,
   },
   title: {
     fontSize: 24,
@@ -59,7 +66,55 @@ const styles = StyleSheet.create({
     borderTopColor: '#e5e7eb',
     paddingTop: 10,
   },
+  flightSection: {
+    marginBottom: 20,
+    borderBottom: 1,
+    borderBottomColor: '#e5e7eb',
+    paddingBottom: 10,
+  },
+  flightNumber: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  totalSection: {
+    marginTop: 20,
+    borderTop: 2,
+    borderTopColor: '#1e40af',
+    paddingTop: 10,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingVertical: 5,
+  },
+  totalLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#1e40af',
+    marginRight: 20,
+  },
+  totalValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#1e40af',
+  },
 });
+
+interface Flight {
+  from: string;
+  to: string;
+  departureDate: string;
+  departureTime: string;
+  arrivalDate: string;
+  arrivalTime: string;
+  flightNumber: string;
+  terminal: string;
+  arrivalTerminal: string;
+  class: string;
+  airline: string;
+  duration: string;
+}
 
 interface TicketPDFProps {
   ticket: {
@@ -68,20 +123,14 @@ interface TicketPDFProps {
     ticketNumber: string;
     frequentFlyerNo: string;
     seatNo: string;
-    from: string;
-    to: string;
-    departureDate: string;
-    departureTime: string;
-    arrivalDate: string;
-    arrivalTime: string;
-    flightNumber: string;
-    class: string;
-    airline: string;
-    duration: string;
+    email: string;
     meals: string;
     baggage: string;
-    terminal: string;
-    arrivalTerminal: string;
+    flights: Flight[];
+    grandTotal?: {
+      amount: number;
+      currency: 'EGP' | 'USD';
+    };
   };
 }
 
@@ -89,11 +138,17 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket }) => (
   <Document>
     <Page size="A4" style={styles.page}>
       <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>FLIGHT E-TICKET</Text>
+        <View style={styles.headerContent}>
+          <Image
+            style={styles.logo}
+            src="https://maztravel.net/wp-content/uploads/2024/02/maz-travel-logo.png"
+          />
           <Text style={styles.companyInfo}>MAZ TRAVEL</Text>
           <Text style={styles.companyInfo}>EMAIL: RESERVATION@MAZTRAVEL.NET</Text>
           <Text style={styles.companyInfo}>PHONE: 01005599399 / 01010737343</Text>
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>FLIGHT E-TICKET</Text>
         </View>
       </View>
 
@@ -127,8 +182,8 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket }) => (
             <Text style={styles.value}>{ticket.frequentFlyerNo || 'N/A'}</Text>
           </View>
           <View style={styles.column}>
-            <Text style={styles.label}>Meals</Text>
-            <Text style={styles.value}>{ticket.meals || 'N/A'}</Text>
+            <Text style={styles.label}>Email</Text>
+            <Text style={styles.value}>{ticket.email || 'N/A'}</Text>
           </View>
         </View>
 
@@ -138,39 +193,58 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket }) => (
             <Text style={styles.value}>{ticket.baggage || 'N/A'}</Text>
           </View>
           <View style={styles.column}>
-            <Text style={styles.label}>Airline</Text>
-            <Text style={styles.value}>{ticket.airline || 'N/A'}</Text>
+            <Text style={styles.label}>Meals</Text>
+            <Text style={styles.value}>{ticket.meals || 'N/A'}</Text>
           </View>
         </View>
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>FLIGHT DETAILS</Text>
-        <View style={styles.row}>
-          <View style={styles.column}>
-            <Text style={styles.label}>Flight</Text>
-            <Text style={styles.value}>{`${ticket.class || 'N/A'}\n${ticket.flightNumber || 'N/A'}`}</Text>
+        {ticket.flights.map((flight, index) => (
+          <View key={index} style={styles.flightSection}>
+            <Text style={styles.flightNumber}>Flight {index + 1}</Text>
+            <View style={styles.row}>
+              <View style={styles.column}>
+                <Text style={styles.label}>Flight</Text>
+                <Text style={styles.value}>
+                  {`${flight.class || 'N/A'}\n${flight.airline || 'N/A'}\n${flight.flightNumber || 'N/A'}`}
+                </Text>
+              </View>
+              <View style={styles.column}>
+                <Text style={styles.label}>Departs</Text>
+                <Text style={styles.value}>
+                  {`${flight.departureDate || 'N/A'} ${flight.departureTime || 'N/A'}\n${flight.from || 'N/A'}`}
+                  {flight.terminal ? `\nTerminal: ${flight.terminal}` : ''}
+                </Text>
+              </View>
+              <View style={styles.column}>
+                <Text style={styles.label}>Duration</Text>
+                <Text style={styles.value}>{flight.duration || 'N/A'}</Text>
+              </View>
+              <View style={styles.column}>
+                <Text style={styles.label}>Arrives</Text>
+                <Text style={styles.value}>
+                  {`${flight.arrivalDate || 'N/A'} ${flight.arrivalTime || 'N/A'}\n${flight.to || 'N/A'}`}
+                  {flight.arrivalTerminal ? `\nTerminal: ${flight.arrivalTerminal}` : ''}
+                </Text>
+              </View>
+            </View>
           </View>
-          <View style={styles.column}>
-            <Text style={styles.label}>Departs</Text>
-            <Text style={styles.value}>
-              {`${ticket.departureDate || 'N/A'} ${ticket.departureTime || 'N/A'}\n${ticket.from || 'N/A'}`}
-              {ticket.terminal ? `\nTerminal: ${ticket.terminal}` : ''}
-            </Text>
-          </View>
-          <View style={styles.column}>
-            <Text style={styles.label}>Duration</Text>
-            <Text style={styles.value}>{ticket.duration || 'N/A'}</Text>
-          </View>
-          <View style={styles.column}>
-            <Text style={styles.label}>Arrives</Text>
-            <Text style={styles.value}>
-              {`${ticket.arrivalDate || 'N/A'} ${ticket.arrivalTime || 'N/A'}\n${ticket.to || 'N/A'}`}
-              {ticket.arrivalTerminal ? `\nTerminal: ${ticket.arrivalTerminal}` : ''}
+        ))}
+      </View>
+
+      {ticket.grandTotal && (
+        <View style={styles.totalSection}>
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Grand Total:</Text>
+            <Text style={styles.totalValue}>
+              {ticket.grandTotal.currency === 'EGP' ? 'EGP ' : '$ '}
+              {ticket.grandTotal.amount.toLocaleString()}
             </Text>
           </View>
         </View>
-      </View>
+      )}
     </Page>
   </Document>
 );
