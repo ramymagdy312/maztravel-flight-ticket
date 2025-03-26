@@ -177,11 +177,7 @@ const FlightTicketForm: React.FC = () => {
   return (
     <div className="max-w-4xl w-full bg-white rounded-xl shadow-lg p-8">
       <div className="flex items-center justify-center mb-8">
-        <img
-          src="https://maztravel.net/uploads/0000/1/2023/10/29/183461079-112600590954161-273977000443253765-n1.png"
-          alt="Maz Travel Logo"
-          className="h-16 mr-4"
-        />
+        <img src="Logo.png" alt="Maz Travel Logo" className="h-16 mr-4" />
         <h2 className="text-2xl font-bold text-gray-800 ml-3">
           Flight Ticket Details
         </h2>

@@ -146,10 +146,7 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket }) => (
     <Page size="A4" style={styles.page}>
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <Image
-            style={styles.logo}
-            src="https://maztravel.net/uploads/0000/1/2023/10/29/183461079-112600590954161-273977000443253765-n1.png"
-          />
+          <Image style={styles.logo} src="Logo.png" />
           <Text style={styles.companyInfo}>MAZ TRAVEL</Text>
           <Text style={styles.companyInfo}>
             EMAIL: RESERVATION@MAZTRAVEL.NET
