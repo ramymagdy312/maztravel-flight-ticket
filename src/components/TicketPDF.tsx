@@ -106,6 +106,21 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#1e40af",
   },
+  remark: {
+    marginTop: 10,
+    padding: 5,
+    backgroundColor: "#f3f4f6",
+    borderRadius: 4,
+  },
+  remarkLabel: {
+    fontSize: 10,
+    color: "#4b5563",
+    marginBottom: 2,
+  },
+  remarkText: {
+    fontSize: 11,
+    color: "#1f2937",
+  },
 });
 
 interface Flight {
@@ -121,6 +136,7 @@ interface Flight {
   class: string;
   airline: string;
   duration: string;
+  remark: string;
 }
 
 interface TicketPDFProps {
@@ -186,7 +202,7 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket }) => (
 
         <View style={styles.row}>
           <View style={styles.column}>
-            <Text style={styles.label}>Frequent flyer no</Text>
+            <Text style={styles.label}>Frequent fl yer no</Text>
             <Text style={styles.value}>{ticket.frequentFlyerNo || "N/A"}</Text>
           </View>
           <View style={styles.column}>
@@ -246,6 +262,12 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket }) => (
                 </Text>
               </View>
             </View>
+            {flight.remark && (
+              <View style={styles.remark}>
+                <Text style={styles.remarkLabel}>Remark:</Text>
+                <Text style={styles.remarkText}>{flight.remark}</Text>
+              </View>
+            )}
           </View>
         ))}
       </View>

@@ -12,8 +12,9 @@ import {
   Plus,
   Trash2,
   DollarSign,
+  MessageSquare,
 } from "lucide-react";
-import { PDFDownloadLink } from "@react-pdf/renderer";
+import { PDFDownloadLink, pdf } from "@react-pdf/renderer";
 import TicketPDF from "./TicketPDF";
 
 interface Flight {
@@ -29,6 +30,7 @@ interface Flight {
   class: string;
   airline: string;
   duration: string;
+  remark: string;
 }
 
 interface FlightDetails {
@@ -64,6 +66,7 @@ const emptyFlight: Flight = {
   class: "Economy",
   airline: "Egyptair",
   duration: "",
+  remark: "",
 };
 
 const FlightTicketForm: React.FC = () => {
@@ -81,9 +84,8 @@ const FlightTicketForm: React.FC = () => {
 
   const [showGrandTotal, setShowGrandTotal] = useState(false);
   const [grandTotalAmount, setGrandTotalAmount] = useState("");
-  const [grandTotalCurrency, setGrandTotalCurrency] = useState<"EGP" | "USD">(
-    "EGP"
-  );
+  const [grandTotalCurrency, setGrandTotalCurrency] = useState<"EGP" | "USD">("EGP");
+  const [sending, setSending] = useState(false);
 
   const calculateDuration = (flight: Flight) => {
     if (
@@ -92,13 +94,10 @@ const FlightTicketForm: React.FC = () => {
       flight.arrivalDate &&
       flight.arrivalTime
     ) {
-      const departure = new Date(
-        `${flight.departureDate}T${flight.departureTime}`
-      );
+      const departure = new Date(`${flight.departureDate}T${flight.departureTime}`);
       const arrival = new Date(`${flight.arrivalDate}T${flight.arrivalTime}`);
 
-      const diffInMinutes =
-        Math.abs(arrival.getTime() - departure.getTime()) / (1000 * 60);
+      const diffInMinutes = Math.abs(arrival.getTime() - departure.getTime()) / (1000 * 60);
       const hours = Math.floor(diffInMinutes / 60);
       const minutes = Math.round(diffInMinutes % 60);
 
@@ -119,18 +118,11 @@ const FlightTicketForm: React.FC = () => {
     }));
   }, [
     flightDetails.flights
-      .map(
-        (f) =>
-          `${f.departureDate}${f.departureTime}${f.arrivalDate}${f.arrivalTime}`
-      )
+      .map((f) => `${f.departureDate}${f.departureTime}${f.arrivalDate}${f.arrivalTime}`)
       .join(),
   ]);
 
-  const handleFlightChange = (
-    index: number,
-    field: keyof Flight,
-    value: string
-  ) => {
+  const handleFlightChange = (index: number, field: keyof Flight, value: string) => {
     const newFlights = [...flightDetails.flights];
     newFlights[index] = {
       ...newFlights[index],
@@ -158,11 +150,6 @@ const FlightTicketForm: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // PDF download will be handled by PDFDownloadLink
-  };
-
   const getTicketData = () => {
     const ticketData = { ...flightDetails };
     if (showGrandTotal && grandTotalAmount) {
@@ -174,13 +161,59 @@ const FlightTicketForm: React.FC = () => {
     return ticketData;
   };
 
+  const sendEmail = async () => {
+    try {
+      setSending(true);
+      const ticketData = getTicketData();
+      const pdfBlob = await pdf(<TicketPDF ticket={ticketData} />).toBlob();
+      const pdfBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64 = reader.result as string;
+          resolve(base64.split(",")[1]);
+        };
+        reader.readAsDataURL(pdfBlob);
+      });
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-ticket`,
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            pdfBase64,
+            recipientEmail: flightDetails.email,
+            subject: `Flight Ticket - PNR: ${flightDetails.pnr}`,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to send email");
+      }
+
+      alert("Ticket has been sent to your email!");
+    } catch (error) {
+      console.error("Error sending email:", error);
+      alert("Failed to send email. Please try again.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await sendEmail();
+  };
+
   return (
     <div className="max-w-4xl w-full bg-white rounded-xl shadow-lg p-8">
       <div className="flex items-center justify-center mb-8">
         <img src="Logo.png" alt="Maz Travel Logo" className="h-16 mr-4" />
-        <h2 className="text-2xl font-bold text-gray-800 ml-3">
-          Flight Ticket Details
-        </h2>
+        <h2 className="text-2xl font-bold text-gray-800 ml-3">Flight Ticket Details</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -494,6 +527,22 @@ const FlightTicketForm: React.FC = () => {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
                   />
                 </div>
+
+                <div className="md:col-span-2 space-y-2">
+                  <label className="flex items-center text-gray-700">
+                    <MessageSquare className="w-5 h-5 mr-2" />
+                    <span>Remark</span>
+                  </label>
+                  <textarea
+                    value={flight.remark}
+                    onChange={(e) =>
+                      handleFlightChange(index, "remark", e.target.value)
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={3}
+                    placeholder="Add any additional notes or remarks for this flight..."
+                  />
+                </div>
               </div>
             </div>
           ))}
@@ -566,15 +615,24 @@ const FlightTicketForm: React.FC = () => {
           <PDFDownloadLink
             document={<TicketPDF ticket={getTicketData()} />}
             fileName={`flight-ticket-${flightDetails.pnr}.pdf`}
-            className="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+            className="bg-gray-600 text-white py-3 px-6 rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center space-x-2"
           >
             {({ loading }) => (
               <>
                 <Mail className="w-5 h-5" />
-                <span>{loading ? "Generating PDF..." : "Download Ticket"}</span>
+                <span>{loading ? "Generating PDF..." : "Download PDF"}</span>
               </>
             )}
           </PDFDownloadLink>
+
+          <button
+            type="submit"
+            disabled={sending}
+            className="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Mail className="w-5 h-5" />
+            <span>{sending ? "Sending..." : "Send to Email"}</span>
+          </button>
         </div>
       </form>
     </div>
