@@ -49,7 +49,26 @@ interface FlightDetails {
   };
 }
 
-const AIRLINES = ["Egyptair", "AirCairo", "Turkish Airlines"] as const;
+const AIRLINES = [
+  "Air Cairo",
+  "Egyptair",
+  "AlMasria Universal Airlines",
+  "Nesma Airline",
+  "Nile Air",
+  "FLYNAS",
+  "Saudi Arabian",
+  "Flyadeal",
+  "Emirates",
+  "Ethiopian",
+  "Etihad",
+  "Gulf Air",
+  "Jazeera Airways",
+  "Oman Air",
+  "Qatar",
+  "Royal Jordanian",
+  "Turkish Airlines"
+] as const;
+
 const TICKET_CLASSES = ["Economy", "Business Class"] as const;
 const CURRENCIES = ["EGP", "USD"] as const;
 
@@ -64,7 +83,7 @@ const emptyFlight: Flight = {
   terminal: "",
   arrivalTerminal: "",
   class: "Economy",
-  airline: "Egyptair",
+  airline: "Air Cairo",
   duration: "",
   remark: "",
 };
@@ -319,6 +338,22 @@ const FlightTicketForm: React.FC = () => {
               }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="flex items-center text-gray-700">
+              <Utensils className="w-5 h-5 mr-2" />
+              <span>Meals</span>
+            </label>
+            <input
+              type="text"
+              value={flightDetails.meals}
+              onChange={(e) =>
+                setFlightDetails({ ...flightDetails, meals: e.target.value })
+              }
+              placeholder="e.g., Vegetarian, Halal, Regular"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
