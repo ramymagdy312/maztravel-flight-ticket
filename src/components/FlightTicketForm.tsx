@@ -128,7 +128,7 @@ const FlightTicketForm: React.FC = () => {
   useEffect(() => {
     const updatedFlights = flightDetails.flights.map((flight) => ({
       ...flight,
-      duration: calculateDuration(flight),
+      duration: flight.duration || calculateDuration(flight), // Only update if duration is empty
     }));
 
     setFlightDetails((prev) => ({
@@ -558,8 +558,11 @@ const FlightTicketForm: React.FC = () => {
                   <input
                     type="text"
                     value={flight.duration}
-                    readOnly
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                    onChange={(e) =>
+                      handleFlightChange(index, "duration", e.target.value)
+                    }
+                    placeholder="e.g., 2h 30m"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
