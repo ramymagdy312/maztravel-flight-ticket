@@ -66,7 +66,8 @@ const AIRLINES = [
   "Oman Air",
   "Qatar",
   "Royal Jordanian",
-  "Turkish Airlines"
+  "Turkish Airlines",
+  "Condor Flugdiens",
 ] as const;
 
 const TICKET_CLASSES = ["Economy", "Business Class"] as const;
