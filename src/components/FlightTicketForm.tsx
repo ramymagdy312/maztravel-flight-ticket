@@ -127,10 +127,14 @@ const FlightTicketForm: React.FC = () => {
   };
 
   useEffect(() => {
-    const updatedFlights = flightDetails.flights.map((flight) => ({
-      ...flight,
-      duration: calculateDuration(flight), // Always update duration when times change
-    }));
+    const updatedFlights = flightDetails.flights.map((flight) => {
+      const autoDuration = calculateDuration(flight);
+      // Only auto-fill if duration is empty
+      return {
+        ...flight,
+        duration: flight.duration || autoDuration,
+      };
+    });
 
     setFlightDetails((prev) => ({
       ...prev,
@@ -561,8 +565,11 @@ const FlightTicketForm: React.FC = () => {
                   <input
                     type="text"
                     value={flight.duration}
-                    readOnly
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                    onChange={(e) =>
+                      handleFlightChange(index, "duration", e.target.value)
+                    }
+                    placeholder="e.g., 2h 30m"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
