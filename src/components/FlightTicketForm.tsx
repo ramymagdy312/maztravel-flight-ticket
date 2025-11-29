@@ -47,6 +47,7 @@ interface FlightDetails {
     amount: number;
     currency: "EGP" | "USD";
   };
+  showIssueDateTime?: boolean;
 }
 
 const AIRLINES = [
@@ -105,6 +106,7 @@ const FlightTicketForm: React.FC = () => {
   const [showGrandTotal, setShowGrandTotal] = useState(false);
   const [grandTotalAmount, setGrandTotalAmount] = useState("");
   const [grandTotalCurrency, setGrandTotalCurrency] = useState<"EGP" | "USD">("EGP");
+  const [showIssueDateTime, setShowIssueDateTime] = useState(false);
   const [sending, setSending] = useState(false);
 
   const calculateDuration = (flight: Flight) => {
@@ -182,6 +184,7 @@ const FlightTicketForm: React.FC = () => {
         currency: grandTotalCurrency,
       };
     }
+    ticketData.showIssueDateTime = showIssueDateTime;
     return ticketData;
   };
 
@@ -654,6 +657,19 @@ const FlightTicketForm: React.FC = () => {
               </div>
             </div>
           )}
+
+          <div className="flex items-center space-x-2 pt-2">
+            <input
+              type="checkbox"
+              id="showIssueDateTime"
+              checked={showIssueDateTime}
+              onChange={(e) => setShowIssueDateTime(e.target.checked)}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label htmlFor="showIssueDateTime" className="text-gray-700">
+              Show Ticket Issue Date & Time
+            </label>
+          </div>
         </div>
 
         <div className="flex justify-end space-x-4">

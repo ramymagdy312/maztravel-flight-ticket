@@ -121,6 +121,20 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "#1f2937",
   },
+  footer: {
+    position: "absolute",
+    bottom: 30,
+    left: 30,
+    right: 30,
+    textAlign: "center",
+    borderTop: 1,
+    borderTopColor: "#e5e7eb",
+    paddingTop: 10,
+  },
+  footerText: {
+    fontSize: 10,
+    color: "#6b7280",
+  },
 });
 
 interface Flight {
@@ -154,12 +168,23 @@ interface TicketPDFProps {
       amount: number;
       currency: "EGP" | "USD";
     };
+    showIssueDateTime?: boolean;
   };
 }
 
-const TicketPDF: React.FC<TicketPDFProps> = ({ ticket }) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
+const TicketPDF: React.FC<TicketPDFProps> = ({ ticket }) => {
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, "0");
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const year = now.getFullYear();
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
+  const issuedDateTime = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Image style={styles.logo} src="Logo.png" />
@@ -283,8 +308,17 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket }) => (
           </View>
         </View>
       )}
+
+      {ticket.showIssueDateTime && (
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            Issued on: {issuedDateTime}
+          </Text>
+        </View>
+      )}
     </Page>
   </Document>
-);
+  );
+};
 
 export default TicketPDF;
