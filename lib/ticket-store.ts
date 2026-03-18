@@ -50,7 +50,7 @@ export async function saveTicket(
     .single();
 
   if (error) {
-    console.error("Error saving ticket:", error);
+    console.error("Error saving ticket:", error.message, error.code, error.details, error.hint, JSON.stringify(error));
     return null;
   }
 

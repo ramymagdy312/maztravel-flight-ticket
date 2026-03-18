@@ -141,8 +141,21 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     alignItems: "flex-start",
   },
-  flightCol: {
-    flex: 1,
+  flightColFrom: {
+    width: "40%",
+    paddingRight: 8,
+  },
+  flightColDuration: {
+    width: "20%",
+    paddingRight: 8,
+    alignItems: "center",
+  },
+  flightColTo: {
+    width: "40%",
+    paddingRight: 8,
+  },
+  flightColClass: {
+    width: "50%",
   },
   flightLabel: {
     fontSize: 8,
@@ -372,35 +385,35 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
                   {flight.flightNumber || "—"}
                 </Text>
                 <View style={styles.flightRow}>
-                  <View style={styles.flightCol}>
+                  <View style={styles.flightColFrom}>
                     <Text style={styles.flightLabel}>From</Text>
                     <Text style={styles.flightValueBold}>{n(flight.from)}</Text>
+                    {flight.terminal ? (
+                      <Text style={styles.flightValue}>Terminal {flight.terminal}</Text>
+                    ) : null}
                     <Text style={styles.flightValue}>
-                      {n(flight.departureDate)} {n(flight.departureTime)}
-                      {flight.terminal
-                        ? ` • Terminal ${flight.terminal}`
-                        : ""}
+                      {n(flight.departureDate)}  {n(flight.departureTime)}
                     </Text>
                   </View>
-                  <View style={styles.flightCol}>
+                  <View style={styles.flightColDuration}>
                     <Text style={styles.flightLabel}>Duration</Text>
                     <Text style={styles.flightValue}>
                       {n(flight.duration)}
                     </Text>
                   </View>
-                  <View style={styles.flightCol}>
+                  <View style={styles.flightColTo}>
                     <Text style={styles.flightLabel}>To</Text>
                     <Text style={styles.flightValueBold}>{n(flight.to)}</Text>
+                    {flight.arrivalTerminal ? (
+                      <Text style={styles.flightValue}>Terminal {flight.arrivalTerminal}</Text>
+                    ) : null}
                     <Text style={styles.flightValue}>
-                      {n(flight.arrivalDate)} {n(flight.arrivalTime)}
-                      {flight.arrivalTerminal
-                        ? ` • Terminal ${flight.arrivalTerminal}`
-                        : ""}
+                      {n(flight.arrivalDate)}  {n(flight.arrivalTime)}
                     </Text>
                   </View>
                 </View>
                 <View style={styles.flightRow}>
-                  <View style={styles.flightCol}>
+                  <View style={styles.flightColClass}>
                     <Text style={styles.flightLabel}>Class</Text>
                     <Text style={styles.flightValue}>{n(flight.class)}</Text>
                   </View>
