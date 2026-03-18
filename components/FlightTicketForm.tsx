@@ -20,61 +20,10 @@ import {
 } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import TicketPDF from "./TicketPDF";
-interface Flight {
-  from: string;
-  to: string;
-  departureDate: string;
-  departureTime: string;
-  arrivalDate: string;
-  arrivalTime: string;
-  flightNumber: string;
-  terminal: string;
-  arrivalTerminal: string;
-  class: string;
-  airline: string;
-  duration: string;
-  remark: string;
-}
+import { saveTicket } from "@/lib/ticket-store";
+import { getAirlines, getTicketClasses } from "@/lib/settings-store";
+import type { Flight, FlightDetails } from "@/lib/types";
 
-interface FlightDetails {
-  passengerName: string;
-  email: string;
-  pnr: string;
-  ticketNumber: string;
-  frequentFlyerNo: string;
-  seatNo: string;
-  meals: string;
-  baggage: string;
-  flights: Flight[];
-  grandTotal?: {
-    amount: number;
-    currency: "EGP" | "USD";
-  };
-  showIssueDateTime?: boolean;
-}
-
-const AIRLINES = [
-  "Air Cairo",
-  "Egyptair",
-  "AlMasria Universal Airlines",
-  "Nesma Airline",
-  "Nile Air",
-  "FLYNAS",
-  "Saudi Arabian",
-  "Flyadeal",
-  "Emirates",
-  "Ethiopian",
-  "Etihad",
-  "Gulf Air",
-  "Jazeera Airways",
-  "Oman Air",
-  "Qatar",
-  "Royal Jordanian",
-  "Turkish Airlines",
-  "Condor Flugdiens",
-] as const;
-
-const TICKET_CLASSES = ["Economy", "Business Class"] as const;
 const CURRENCIES = ["EGP", "USD"] as const;
 
 const emptyFlight: Flight = {
@@ -87,13 +36,16 @@ const emptyFlight: Flight = {
   flightNumber: "",
   terminal: "",
   arrivalTerminal: "",
-  class: "Economy",
-  airline: "Air Cairo",
+  class: "",
+  airline: "",
   duration: "",
   remark: "",
 };
 
 const FlightTicketForm: React.FC = () => {
+  const [airlines, setAirlines] = useState<string[]>([]);
+  const [ticketClasses, setTicketClasses] = useState<string[]>([]);
+
   const [flightDetails, setFlightDetails] = useState<FlightDetails>({
     passengerName: "",
     email: "",
@@ -113,6 +65,31 @@ const FlightTicketForm: React.FC = () => {
   const [showIssueDateTime, setShowIssueDateTime] = useState(false);
   const [sending, setSending] = useState(false);
   const [downloading, setDownloading] = useState(false);
+
+  useEffect(() => {
+    async function loadSettings() {
+      const [airlinesData, classesData] = await Promise.all([
+        getAirlines(),
+        getTicketClasses(),
+      ]);
+      const airlineNames = airlinesData.map((a) => a.name);
+      const classNames = classesData.map((c) => c.name);
+      setAirlines(airlineNames);
+      setTicketClasses(classNames);
+
+      if (airlineNames.length > 0 || classNames.length > 0) {
+        setFlightDetails((prev) => ({
+          ...prev,
+          flights: prev.flights.map((f) => ({
+            ...f,
+            airline: f.airline || airlineNames[0] || "",
+            class: f.class || classNames[0] || "",
+          })),
+        }));
+      }
+    }
+    loadSettings();
+  }, []);
 
   const calculateDuration = (flight: Flight) => {
     if (
@@ -280,6 +257,7 @@ const FlightTicketForm: React.FC = () => {
         throw new Error("Failed to send email");
       }
 
+      await saveTicket(ticketData, "sent");
       alert("Ticket has been sent to your email!");
     } catch (error) {
       console.error("Error sending email:", error);
@@ -307,6 +285,7 @@ const FlightTicketForm: React.FC = () => {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+      await saveTicket(ticket, "downloaded");
     } catch (error) {
       console.error("Error generating PDF:", error);
       const message = error instanceof Error ? error.message : "Failed to generate PDF. Please try again.";
@@ -459,7 +438,8 @@ const FlightTicketForm: React.FC = () => {
                     className={inputClass}
                     required
                   >
-                    {AIRLINES.map((airline) => (
+                    <option value="">Select airline...</option>
+                    {airlines.map((airline) => (
                       <option key={airline} value={airline}>{airline}</option>
                     ))}
                   </select>
@@ -472,7 +452,8 @@ const FlightTicketForm: React.FC = () => {
                     className={inputClass}
                     required
                   >
-                    {TICKET_CLASSES.map((c) => (
+                    <option value="">Select class...</option>
+                    {ticketClasses.map((c) => (
                       <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
