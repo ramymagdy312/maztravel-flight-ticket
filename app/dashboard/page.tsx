@@ -155,7 +155,7 @@ export default function DashboardOverview() {
               {recentTickets.map((ticket) => (
                 <div key={ticket.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate">{ticket.passengerName}</p>
+                    <p className="text-sm font-medium text-gray-800 truncate">{ticket.passengers.map((p) => p.name).join(", ") || "—"}</p>
                     <p className="text-xs text-gray-500">
                       PNR: {ticket.pnr} &bull; {ticket.flights[0]?.from} → {ticket.flights[0]?.to}
                     </p>

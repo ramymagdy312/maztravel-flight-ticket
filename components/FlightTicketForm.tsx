@@ -17,14 +17,24 @@ import {
   MessageSquare,
   Download,
   Send,
+  Users,
 } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import TicketPDF from "./TicketPDF";
 import { saveTicket } from "@/lib/ticket-store";
 import { getAirlines, getTicketClasses } from "@/lib/settings-store";
-import type { Flight, FlightDetails } from "@/lib/types";
+import type { Flight, FlightDetails, Passenger } from "@/lib/types";
 
 const CURRENCIES = ["EGP", "USD"] as const;
+
+const emptyPassenger: Passenger = {
+  name: "",
+  ticketNumber: "",
+  frequentFlyerNo: "",
+  seatNo: "",
+  meals: "",
+  baggage: "2P Cabin: 5-7Kg",
+};
 
 const emptyFlight: Flight = {
   from: "",
@@ -47,14 +57,9 @@ const FlightTicketForm: React.FC = () => {
   const [ticketClasses, setTicketClasses] = useState<string[]>([]);
 
   const [flightDetails, setFlightDetails] = useState<FlightDetails>({
-    passengerName: "",
+    passengers: [{ ...emptyPassenger }],
     email: "",
     pnr: "",
-    ticketNumber: "",
-    frequentFlyerNo: "",
-    seatNo: "",
-    meals: "",
-    baggage: "2P Cabin: 5-7Kg",
     flights: [{ ...emptyFlight }],
   });
 
@@ -100,12 +105,10 @@ const FlightTicketForm: React.FC = () => {
     ) {
       const departure = new Date(`${flight.departureDate}T${flight.departureTime}`);
       const arrival = new Date(`${flight.arrivalDate}T${flight.arrivalTime}`);
-
       const diffInMinutes =
         Math.abs(arrival.getTime() - departure.getTime()) / (1000 * 60);
       const hours = Math.floor(diffInMinutes / 60);
       const minutes = Math.round(diffInMinutes % 60);
-
       return `${hours}h ${minutes}m`;
     }
     return "";
@@ -114,32 +117,43 @@ const FlightTicketForm: React.FC = () => {
   useEffect(() => {
     const updatedFlights = flightDetails.flights.map((flight) => {
       const autoDuration = calculateDuration(flight);
-      return {
-        ...flight,
-        duration: flight.duration || autoDuration,
-      };
+      return { ...flight, duration: flight.duration || autoDuration };
     });
-
-    setFlightDetails((prev) => ({
-      ...prev,
-      flights: updatedFlights,
-    }));
+    setFlightDetails((prev) => ({ ...prev, flights: updatedFlights }));
   }, [
     flightDetails.flights
       .map((f) => `${f.departureDate}${f.departureTime}${f.arrivalDate}${f.arrivalTime}`)
       .join(),
   ]);
 
-  const handleFlightChange = (index: number, field: keyof Flight, value: string) => {
-    const newFlights = [...flightDetails.flights];
-    newFlights[index] = {
-      ...newFlights[index],
-      [field]: value,
-    };
+  // ── Passenger handlers ──
+  const handlePassengerChange = (index: number, field: keyof Passenger, value: string) => {
+    const updated = [...flightDetails.passengers];
+    updated[index] = { ...updated[index], [field]: value };
+    setFlightDetails((prev) => ({ ...prev, passengers: updated }));
+  };
+
+  const addPassenger = () => {
     setFlightDetails((prev) => ({
       ...prev,
-      flights: newFlights,
+      passengers: [...prev.passengers, { ...emptyPassenger }],
     }));
+  };
+
+  const removePassenger = (index: number) => {
+    if (flightDetails.passengers.length > 1) {
+      setFlightDetails((prev) => ({
+        ...prev,
+        passengers: prev.passengers.filter((_, i) => i !== index),
+      }));
+    }
+  };
+
+  // ── Flight handlers ──
+  const handleFlightChange = (index: number, field: keyof Flight, value: string) => {
+    const newFlights = [...flightDetails.flights];
+    newFlights[index] = { ...newFlights[index], [field]: value };
+    setFlightDetails((prev) => ({ ...prev, flights: newFlights }));
   };
 
   const addFlight = () => {
@@ -158,47 +172,43 @@ const FlightTicketForm: React.FC = () => {
     }
   };
 
-  const getTicketData = () => {
-    const ticketData = { ...flightDetails };
+  // ── Data helpers ──
+  const getTicketData = (): FlightDetails => {
+    const data = { ...flightDetails };
     if (showGrandTotal && grandTotalAmount) {
-      ticketData.grandTotal = {
+      data.grandTotal = {
         amount: parseFloat(grandTotalAmount),
         currency: grandTotalCurrency,
       };
     }
-    ticketData.showIssueDateTime = showIssueDateTime;
-    return ticketData;
+    data.showIssueDateTime = showIssueDateTime;
+    return data;
   };
 
-  /** Plain object copy for react-pdf: no undefined/null, no getters (avoids hasOwnProperty errors) */
   const getTicketDataForPdf = (): FlightDetails => {
     const raw = getTicketData();
     const str = JSON.stringify(raw);
     const parsed = JSON.parse(str) as FlightDetails;
-    const emptyFlightOut: Flight = {
-      from: "",
-      to: "",
-      departureDate: "",
-      departureTime: "",
-      arrivalDate: "",
-      arrivalTime: "",
-      flightNumber: "",
-      terminal: "",
-      arrivalTerminal: "",
-      class: "Economy",
-      airline: "Air Cairo",
-      duration: "",
-      remark: "",
-    };
-    const ensureString = (v: unknown): string => (v != null && typeof v === "string" ? v : "");
-    parsed.passengerName = ensureString(parsed.passengerName);
+    const ensureString = (v: unknown): string =>
+      v != null && typeof v === "string" ? v : "";
+
     parsed.email = ensureString(parsed.email);
     parsed.pnr = ensureString(parsed.pnr);
-    parsed.ticketNumber = ensureString(parsed.ticketNumber);
-    parsed.frequentFlyerNo = ensureString(parsed.frequentFlyerNo);
-    parsed.seatNo = ensureString(parsed.seatNo);
-    parsed.meals = ensureString(parsed.meals);
-    parsed.baggage = ensureString(parsed.baggage);
+
+    parsed.passengers = (parsed.passengers || []).map((p) => ({
+      name: ensureString(p.name),
+      ticketNumber: ensureString(p.ticketNumber),
+      frequentFlyerNo: ensureString(p.frequentFlyerNo),
+      seatNo: ensureString(p.seatNo),
+      meals: ensureString(p.meals),
+      baggage: ensureString(p.baggage),
+    }));
+
+    const emptyFlightOut: Flight = {
+      from: "", to: "", departureDate: "", departureTime: "",
+      arrivalDate: "", arrivalTime: "", flightNumber: "", terminal: "",
+      arrivalTerminal: "", class: "", airline: "", duration: "", remark: "",
+    };
     parsed.flights = (parsed.flights || []).map((f) => {
       const o: Flight = { ...emptyFlightOut };
       (Object.keys(emptyFlightOut) as Array<keyof Flight>).forEach((k) => {
@@ -208,6 +218,7 @@ const FlightTicketForm: React.FC = () => {
       });
       return o;
     });
+
     if (parsed.grandTotal) {
       parsed.grandTotal = {
         amount: Number(parsed.grandTotal.amount) || 0,
@@ -217,6 +228,7 @@ const FlightTicketForm: React.FC = () => {
     return parsed;
   };
 
+  // ── Actions ──
   const sendEmail = async () => {
     try {
       setSending(true);
@@ -233,11 +245,8 @@ const FlightTicketForm: React.FC = () => {
 
       const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
       if (!baseUrl || !anonKey) {
-        throw new Error(
-          "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY"
-        );
+        throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
       }
 
       const response = await fetch(`${baseUrl}/functions/v1/send-ticket`, {
@@ -253,9 +262,7 @@ const FlightTicketForm: React.FC = () => {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to send email");
-      }
+      if (!response.ok) throw new Error("Failed to send email");
 
       await saveTicket(ticketData, "sent");
       alert("Ticket has been sent to your email!");
@@ -288,7 +295,7 @@ const FlightTicketForm: React.FC = () => {
       await saveTicket(ticket, "downloaded");
     } catch (error) {
       console.error("Error generating PDF:", error);
-      const message = error instanceof Error ? error.message : "Failed to generate PDF. Please try again.";
+      const message = error instanceof Error ? error.message : "Failed to generate PDF.";
       alert(message);
     } finally {
       setDownloading(false);
@@ -310,29 +317,19 @@ const FlightTicketForm: React.FC = () => {
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-tight">Flight E-Ticket</h1>
-            <p className="text-blue-100 text-sm mt-0.5">Enter passenger and flight details</p>
+            <p className="text-blue-100 text-sm mt-0.5">Enter booking and passenger details</p>
           </div>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="p-8 space-y-8">
-        {/* Passenger details card */}
+        {/* Booking details (shared) */}
         <section className="rounded-xl border border-gray-200 bg-gray-50/50 p-6">
           <h2 className="flex items-center gap-2 text-base font-semibold text-gray-800 mb-5 pb-3 border-b border-gray-200">
-            <User className="w-5 h-5 text-blue-600" />
-            Passenger & booking details
+            <Hash className="w-5 h-5 text-blue-600" />
+            Booking details
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div>
-              <label className={labelClass}><User className={iconClass} /> Passenger Name</label>
-              <input
-                type="text"
-                value={flightDetails.passengerName}
-                onChange={(e) => setFlightDetails({ ...flightDetails, passengerName: e.target.value })}
-                className={inputClass}
-                required
-              />
-            </div>
             <div>
               <label className={labelClass}><Hash className={iconClass} /> PNR</label>
               <input
@@ -341,55 +338,6 @@ const FlightTicketForm: React.FC = () => {
                 onChange={(e) => setFlightDetails({ ...flightDetails, pnr: e.target.value })}
                 className={inputClass}
                 required
-              />
-            </div>
-            <div>
-              <label className={labelClass}><Hash className={iconClass} /> Ticket Number</label>
-              <input
-                type="text"
-                value={flightDetails.ticketNumber}
-                onChange={(e) => setFlightDetails({ ...flightDetails, ticketNumber: e.target.value })}
-                className={inputClass}
-                required
-              />
-            </div>
-            <div>
-              <label className={labelClass}><Hash className={iconClass} /> Frequent Flyer No.</label>
-              <input
-                type="text"
-                value={flightDetails.frequentFlyerNo}
-                onChange={(e) => setFlightDetails({ ...flightDetails, frequentFlyerNo: e.target.value })}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}><Hash className={iconClass} /> Seat Number</label>
-              <input
-                type="text"
-                value={flightDetails.seatNo}
-                onChange={(e) => setFlightDetails({ ...flightDetails, seatNo: e.target.value })}
-                className={inputClass}
-                required
-              />
-            </div>
-            <div>
-              <label className={labelClass}><Briefcase className={iconClass} /> Baggage</label>
-              <input
-                type="text"
-                value={flightDetails.baggage}
-                onChange={(e) => setFlightDetails({ ...flightDetails, baggage: e.target.value })}
-                className={inputClass}
-                required
-              />
-            </div>
-            <div>
-              <label className={labelClass}><Utensils className={iconClass} /> Meals</label>
-              <input
-                type="text"
-                value={flightDetails.meals}
-                onChange={(e) => setFlightDetails({ ...flightDetails, meals: e.target.value })}
-                placeholder="e.g. Vegetarian, Halal"
-                className={inputClass}
               />
             </div>
             <div>
@@ -403,6 +351,106 @@ const FlightTicketForm: React.FC = () => {
               />
             </div>
           </div>
+        </section>
+
+        {/* Passengers section */}
+        <section className="space-y-5">
+          <h2 className="flex items-center gap-2 text-base font-semibold text-gray-800 pb-3 border-b border-gray-200">
+            <Users className="w-5 h-5 text-blue-600" />
+            Passengers ({flightDetails.passengers.length})
+          </h2>
+          {flightDetails.passengers.map((passenger, pIdx) => (
+            <div
+              key={pIdx}
+              className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm space-y-5"
+            >
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-semibold text-blue-600 uppercase tracking-wide flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  Passenger {pIdx + 1}
+                </span>
+                {flightDetails.passengers.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removePassenger(pIdx)}
+                    className="flex items-center gap-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Remove
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="sm:col-span-2">
+                  <label className={labelClass}><User className={iconClass} /> Name</label>
+                  <input
+                    type="text"
+                    value={passenger.name}
+                    onChange={(e) => handlePassengerChange(pIdx, "name", e.target.value)}
+                    className={inputClass}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}><Hash className={iconClass} /> Ticket Number</label>
+                  <input
+                    type="text"
+                    value={passenger.ticketNumber}
+                    onChange={(e) => handlePassengerChange(pIdx, "ticketNumber", e.target.value)}
+                    className={inputClass}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}><Hash className={iconClass} /> Seat Number</label>
+                  <input
+                    type="text"
+                    value={passenger.seatNo}
+                    onChange={(e) => handlePassengerChange(pIdx, "seatNo", e.target.value)}
+                    className={inputClass}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}><Hash className={iconClass} /> Frequent Flyer No.</label>
+                  <input
+                    type="text"
+                    value={passenger.frequentFlyerNo}
+                    onChange={(e) => handlePassengerChange(pIdx, "frequentFlyerNo", e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}><Briefcase className={iconClass} /> Baggage</label>
+                  <input
+                    type="text"
+                    value={passenger.baggage}
+                    onChange={(e) => handlePassengerChange(pIdx, "baggage", e.target.value)}
+                    className={inputClass}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}><Utensils className={iconClass} /> Meals</label>
+                  <input
+                    type="text"
+                    value={passenger.meals}
+                    onChange={(e) => handlePassengerChange(pIdx, "meals", e.target.value)}
+                    placeholder="e.g. Vegetarian, Halal"
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addPassenger}
+            className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl border-2 border-dashed border-emerald-300 text-emerald-600 bg-emerald-50/50 hover:bg-emerald-50 hover:border-emerald-400 font-medium transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            Add another passenger
+          </button>
         </section>
 
         {/* Flight(s) section */}
@@ -460,95 +508,39 @@ const FlightTicketForm: React.FC = () => {
                 </div>
                 <div>
                   <label className={labelClass}><MapPin className={iconClass} /> From</label>
-                  <input
-                    type="text"
-                    value={flight.from}
-                    onChange={(e) => handleFlightChange(index, "from", e.target.value)}
-                    className={inputClass}
-                    required
-                  />
+                  <input type="text" value={flight.from} onChange={(e) => handleFlightChange(index, "from", e.target.value)} className={inputClass} required />
                 </div>
                 <div>
                   <label className={labelClass}><MapPin className={iconClass} /> To</label>
-                  <input
-                    type="text"
-                    value={flight.to}
-                    onChange={(e) => handleFlightChange(index, "to", e.target.value)}
-                    className={inputClass}
-                    required
-                  />
+                  <input type="text" value={flight.to} onChange={(e) => handleFlightChange(index, "to", e.target.value)} className={inputClass} required />
                 </div>
                 <div>
                   <label className={labelClass}><Calendar className={iconClass} /> Departure date</label>
-                  <input
-                    type="date"
-                    value={flight.departureDate}
-                    onChange={(e) => handleFlightChange(index, "departureDate", e.target.value)}
-                    className={inputClass}
-                    required
-                  />
+                  <input type="date" value={flight.departureDate} onChange={(e) => handleFlightChange(index, "departureDate", e.target.value)} className={inputClass} required />
                 </div>
                 <div>
                   <label className={labelClass}><Clock className={iconClass} /> Departure time</label>
-                  <input
-                    type="time"
-                    value={flight.departureTime}
-                    onChange={(e) => handleFlightChange(index, "departureTime", e.target.value)}
-                    step="60"
-                    className={inputClass}
-                    required
-                  />
+                  <input type="time" value={flight.departureTime} onChange={(e) => handleFlightChange(index, "departureTime", e.target.value)} step="60" className={inputClass} required />
                 </div>
                 <div>
                   <label className={labelClass}><Calendar className={iconClass} /> Arrival date</label>
-                  <input
-                    type="date"
-                    value={flight.arrivalDate}
-                    onChange={(e) => handleFlightChange(index, "arrivalDate", e.target.value)}
-                    className={inputClass}
-                    required
-                  />
+                  <input type="date" value={flight.arrivalDate} onChange={(e) => handleFlightChange(index, "arrivalDate", e.target.value)} className={inputClass} required />
                 </div>
                 <div>
                   <label className={labelClass}><Clock className={iconClass} /> Arrival time</label>
-                  <input
-                    type="time"
-                    value={flight.arrivalTime}
-                    onChange={(e) => handleFlightChange(index, "arrivalTime", e.target.value)}
-                    step="60"
-                    className={inputClass}
-                    required
-                  />
+                  <input type="time" value={flight.arrivalTime} onChange={(e) => handleFlightChange(index, "arrivalTime", e.target.value)} step="60" className={inputClass} required />
                 </div>
                 <div>
                   <label className={labelClass}><Hash className={iconClass} /> Flight number</label>
-                  <input
-                    type="text"
-                    value={flight.flightNumber}
-                    onChange={(e) => handleFlightChange(index, "flightNumber", e.target.value)}
-                    className={inputClass}
-                    required
-                  />
+                  <input type="text" value={flight.flightNumber} onChange={(e) => handleFlightChange(index, "flightNumber", e.target.value)} className={inputClass} required />
                 </div>
                 <div>
                   <label className={labelClass}><Clock className={iconClass} /> Duration</label>
-                  <input
-                    type="text"
-                    value={flight.duration}
-                    onChange={(e) => handleFlightChange(index, "duration", e.target.value)}
-                    placeholder="e.g. 2h 30m"
-                    className={inputClass}
-                  />
+                  <input type="text" value={flight.duration} onChange={(e) => handleFlightChange(index, "duration", e.target.value)} placeholder="e.g. 2h 30m" className={inputClass} />
                 </div>
                 <div className="sm:col-span-2">
                   <label className={labelClass}><MessageSquare className={iconClass} /> Remark</label>
-                  <textarea
-                    value={flight.remark}
-                    onChange={(e) => handleFlightChange(index, "remark", e.target.value)}
-                    rows={3}
-                    placeholder="Additional notes for this flight..."
-                    className={inputClass + " resize-none"}
-                  />
+                  <textarea value={flight.remark} onChange={(e) => handleFlightChange(index, "remark", e.target.value)} rows={3} placeholder="Additional notes..." className={inputClass + " resize-none"} />
                 </div>
               </div>
             </div>
@@ -571,49 +563,25 @@ const FlightTicketForm: React.FC = () => {
           </h2>
           <div className="space-y-4">
             <label className="flex items-center gap-3 cursor-pointer group">
-              <input
-                type="checkbox"
-                checked={showGrandTotal}
-                onChange={(e) => setShowGrandTotal(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
+              <input type="checkbox" checked={showGrandTotal} onChange={(e) => setShowGrandTotal(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
               <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Show grand total on ticket</span>
             </label>
             {showGrandTotal && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pl-7">
                 <div>
                   <label className={labelClass}>Amount</label>
-                  <input
-                    type="number"
-                    value={grandTotalAmount}
-                    onChange={(e) => setGrandTotalAmount(e.target.value)}
-                    className={inputClass}
-                    required={showGrandTotal}
-                  />
+                  <input type="number" value={grandTotalAmount} onChange={(e) => setGrandTotalAmount(e.target.value)} className={inputClass} required={showGrandTotal} />
                 </div>
                 <div>
                   <label className={labelClass}>Currency</label>
-                  <select
-                    value={grandTotalCurrency}
-                    onChange={(e) => setGrandTotalCurrency(e.target.value as "EGP" | "USD")}
-                    className={inputClass}
-                    required={showGrandTotal}
-                  >
-                    {CURRENCIES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
+                  <select value={grandTotalCurrency} onChange={(e) => setGrandTotalCurrency(e.target.value as "EGP" | "USD")} className={inputClass} required={showGrandTotal}>
+                    {CURRENCIES.map((c) => (<option key={c} value={c}>{c}</option>))}
                   </select>
                 </div>
               </div>
             )}
             <label htmlFor="showIssueDateTime" className="flex items-center gap-3 cursor-pointer group">
-              <input
-                type="checkbox"
-                id="showIssueDateTime"
-                checked={showIssueDateTime}
-                onChange={(e) => setShowIssueDateTime(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
+              <input type="checkbox" id="showIssueDateTime" checked={showIssueDateTime} onChange={(e) => setShowIssueDateTime(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
               <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Show ticket issue date & time on PDF</span>
             </label>
           </div>
@@ -645,4 +613,3 @@ const FlightTicketForm: React.FC = () => {
 };
 
 export default FlightTicketForm;
-

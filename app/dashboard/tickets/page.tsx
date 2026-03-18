@@ -57,7 +57,7 @@ export default function TicketsHistoryPage() {
   const filtered = tickets.filter((t) => {
     const matchesSearch =
       !searchQuery ||
-      t.passengerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.passengers.some((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
       t.pnr.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || t.status === statusFilter;
@@ -130,7 +130,7 @@ export default function TicketsHistoryPage() {
                 {filtered.map((ticket) => (
                   <tr key={ticket.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="py-3 px-4">
-                      <p className="font-medium text-gray-800">{ticket.passengerName}</p>
+                      <p className="font-medium text-gray-800">{ticket.passengers.map((p) => p.name).join(", ") || "—"}</p>
                       <p className="text-xs text-gray-400">{ticket.email}</p>
                     </td>
                     <td className="py-3 px-4 font-mono text-gray-700">{ticket.pnr}</td>

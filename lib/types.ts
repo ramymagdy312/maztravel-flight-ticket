@@ -1,3 +1,12 @@
+export interface Passenger {
+  name: string;
+  ticketNumber: string;
+  frequentFlyerNo: string;
+  seatNo: string;
+  meals: string;
+  baggage: string;
+}
+
 export interface Flight {
   from: string;
   to: string;
@@ -15,14 +24,9 @@ export interface Flight {
 }
 
 export interface FlightDetails {
-  passengerName: string;
+  passengers: Passenger[];
   email: string;
   pnr: string;
-  ticketNumber: string;
-  frequentFlyerNo: string;
-  seatNo: string;
-  meals: string;
-  baggage: string;
   flights: Flight[];
   grandTotal?: {
     amount: number;

@@ -14,7 +14,6 @@ const styles = StyleSheet.create({
     padding: 0,
     fontFamily: "Helvetica",
   },
-  // Header bar - full width
   headerBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -54,12 +53,10 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.85)",
     marginTop: 2,
   },
-  // Content area
   content: {
     paddingHorizontal: 32,
     paddingBottom: 32,
   },
-  // Section block
   section: {
     marginBottom: 20,
   },
@@ -73,30 +70,56 @@ const styles = StyleSheet.create({
     borderBottomColor: "#1e3a8a",
     letterSpacing: 0.5,
   },
-  // Passenger grid - 2 cols
+  passengerCard: {
+    backgroundColor: "#f8fafc",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    borderRadius: 4,
+    padding: 12,
+    marginBottom: 10,
+  },
+  passengerTitle: {
+    fontSize: 9,
+    fontWeight: "bold",
+    color: "#1e3a8a",
+    marginBottom: 8,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
   passengerGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginTop: 6,
   },
   passengerItem: {
+    width: "33.33%",
+    marginBottom: 8,
+    paddingRight: 12,
+  },
+  passengerItemWide: {
     width: "50%",
-    marginBottom: 12,
-    paddingRight: 16,
+    marginBottom: 8,
+    paddingRight: 12,
   },
   fieldLabel: {
-    fontSize: 8,
+    fontSize: 7,
     color: "#64748b",
-    marginBottom: 2,
+    marginBottom: 1,
     textTransform: "uppercase",
     letterSpacing: 0.4,
   },
   fieldValue: {
-    fontSize: 11,
+    fontSize: 10,
     color: "#0f172a",
     fontWeight: "bold",
   },
-  // Flight card
+  bookingRow: {
+    flexDirection: "row",
+    marginBottom: 12,
+  },
+  bookingItem: {
+    width: "50%",
+    paddingRight: 16,
+  },
   flightCard: {
     backgroundColor: "#f8fafc",
     borderWidth: 1,
@@ -154,7 +177,6 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: "#334155",
   },
-  // Grand total
   totalBox: {
     flexDirection: "row",
     justifyContent: "flex-end",
@@ -176,7 +198,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#1e3a8a",
   },
-  // Footer
   footer: {
     position: "absolute",
     bottom: 0,
@@ -209,6 +230,15 @@ const styles = StyleSheet.create({
   },
 });
 
+interface Passenger {
+  name: string;
+  ticketNumber: string;
+  frequentFlyerNo: string;
+  seatNo: string;
+  meals: string;
+  baggage: string;
+}
+
 interface Flight {
   from: string;
   to: string;
@@ -227,14 +257,9 @@ interface Flight {
 
 interface TicketPDFProps {
   ticket: {
-    passengerName: string;
+    passengers: Passenger[];
     pnr: string;
-    ticketNumber: string;
-    frequentFlyerNo: string;
-    seatNo: string;
     email: string;
-    meals: string;
-    baggage: string;
     flights: Flight[];
     grandTotal?: {
       amount: number;
@@ -246,18 +271,14 @@ interface TicketPDFProps {
 
 const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
   const ticket = {
-    passengerName: ticketProp?.passengerName ?? "",
+    passengers: Array.isArray(ticketProp?.passengers) ? ticketProp.passengers : [],
     pnr: ticketProp?.pnr ?? "",
-    ticketNumber: ticketProp?.ticketNumber ?? "",
-    frequentFlyerNo: ticketProp?.frequentFlyerNo ?? "",
-    seatNo: ticketProp?.seatNo ?? "",
     email: ticketProp?.email ?? "",
-    meals: ticketProp?.meals ?? "",
-    baggage: ticketProp?.baggage ?? "",
     flights: Array.isArray(ticketProp?.flights) ? ticketProp.flights : [],
     grandTotal: ticketProp?.grandTotal,
     showIssueDateTime: Boolean(ticketProp?.showIssueDateTime),
   };
+
   const now = new Date();
   const dd = String(now.getDate()).padStart(2, "0");
   const mm = String(now.getMonth() + 1).padStart(2, "0");
@@ -267,7 +288,8 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
   const ss = String(now.getSeconds()).padStart(2, "0");
   const issuedAt = `${dd}/${mm}/${yyyy} ${hh}:${min}:${ss}`;
 
-  const n = (s: string | undefined) => (s != null && String(s).trim() !== "" ? String(s) : "—");
+  const n = (s: string | undefined) =>
+    s != null && String(s).trim() !== "" ? String(s) : "—";
 
   return (
     <Document>
@@ -276,7 +298,9 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
         <View style={styles.headerBar}>
           <View style={styles.headerLeft}>
             <Text style={styles.brandName}>MAZ TRAVEL</Text>
-            <Text style={styles.brandTagline}>Flight E-Ticket • Reservation & Support</Text>
+            <Text style={styles.brandTagline}>
+              Flight E-Ticket • Reservation & Support
+            </Text>
           </View>
           <View style={styles.headerRight}>
             <Text style={styles.docTitle}>E-TICKET</Text>
@@ -285,43 +309,57 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
         </View>
 
         <View style={styles.content}>
-          {/* Passenger details */}
+          {/* Booking info */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Passenger & booking details</Text>
-            <View style={styles.passengerGrid}>
-              <View style={styles.passengerItem}>
-                <Text style={styles.fieldLabel}>Passenger name</Text>
-                <Text style={styles.fieldValue}>{n(ticket.passengerName)}</Text>
-              </View>
-              <View style={styles.passengerItem}>
+            <Text style={styles.sectionTitle}>Booking information</Text>
+            <View style={styles.bookingRow}>
+              <View style={styles.bookingItem}>
                 <Text style={styles.fieldLabel}>PNR</Text>
                 <Text style={styles.fieldValue}>{n(ticket.pnr)}</Text>
               </View>
-              <View style={styles.passengerItem}>
-                <Text style={styles.fieldLabel}>Ticket number</Text>
-                <Text style={styles.fieldValue}>{n(ticket.ticketNumber)}</Text>
-              </View>
-              <View style={styles.passengerItem}>
-                <Text style={styles.fieldLabel}>Seat</Text>
-                <Text style={styles.fieldValue}>{n(ticket.seatNo)}</Text>
-              </View>
-              <View style={styles.passengerItem}>
-                <Text style={styles.fieldLabel}>Frequent flyer no.</Text>
-                <Text style={styles.fieldValue}>{n(ticket.frequentFlyerNo)}</Text>
-              </View>
-              <View style={styles.passengerItem}>
+              <View style={styles.bookingItem}>
                 <Text style={styles.fieldLabel}>Email</Text>
                 <Text style={styles.fieldValue}>{n(ticket.email)}</Text>
               </View>
-              <View style={styles.passengerItem}>
-                <Text style={styles.fieldLabel}>Baggage</Text>
-                <Text style={styles.fieldValue}>{n(ticket.baggage)}</Text>
-              </View>
-              <View style={styles.passengerItem}>
-                <Text style={styles.fieldLabel}>Meals</Text>
-                <Text style={styles.fieldValue}>{n(ticket.meals)}</Text>
-              </View>
             </View>
+          </View>
+
+          {/* Passengers */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              Passenger details ({ticket.passengers.length})
+            </Text>
+            {ticket.passengers.map((p, i) => (
+              <View key={i} style={styles.passengerCard}>
+                <Text style={styles.passengerTitle}>
+                  Passenger {i + 1} — {n(p.name)}
+                </Text>
+                <View style={styles.passengerGrid}>
+                  <View style={styles.passengerItem}>
+                    <Text style={styles.fieldLabel}>Ticket number</Text>
+                    <Text style={styles.fieldValue}>{n(p.ticketNumber)}</Text>
+                  </View>
+                  <View style={styles.passengerItem}>
+                    <Text style={styles.fieldLabel}>Seat</Text>
+                    <Text style={styles.fieldValue}>{n(p.seatNo)}</Text>
+                  </View>
+                  <View style={styles.passengerItem}>
+                    <Text style={styles.fieldLabel}>Frequent flyer</Text>
+                    <Text style={styles.fieldValue}>
+                      {n(p.frequentFlyerNo)}
+                    </Text>
+                  </View>
+                  <View style={styles.passengerItemWide}>
+                    <Text style={styles.fieldLabel}>Baggage</Text>
+                    <Text style={styles.fieldValue}>{n(p.baggage)}</Text>
+                  </View>
+                  <View style={styles.passengerItemWide}>
+                    <Text style={styles.fieldLabel}>Meals</Text>
+                    <Text style={styles.fieldValue}>{n(p.meals)}</Text>
+                  </View>
+                </View>
+              </View>
+            ))}
           </View>
 
           {/* Flights */}
@@ -329,26 +367,35 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
             <Text style={styles.sectionTitle}>Flight details</Text>
             {ticket.flights.map((flight, index) => (
               <View key={index} style={styles.flightCard}>
-                <Text style={styles.flightCardTitle}>Flight {index + 1} • {flight.airline || "—"} • {flight.flightNumber || "—"}</Text>
+                <Text style={styles.flightCardTitle}>
+                  Flight {index + 1} • {flight.airline || "—"} •{" "}
+                  {flight.flightNumber || "—"}
+                </Text>
                 <View style={styles.flightRow}>
                   <View style={styles.flightCol}>
                     <Text style={styles.flightLabel}>From</Text>
                     <Text style={styles.flightValueBold}>{n(flight.from)}</Text>
                     <Text style={styles.flightValue}>
                       {n(flight.departureDate)} {n(flight.departureTime)}
-                      {flight.terminal ? ` • Terminal ${flight.terminal}` : ""}
+                      {flight.terminal
+                        ? ` • Terminal ${flight.terminal}`
+                        : ""}
                     </Text>
                   </View>
                   <View style={styles.flightCol}>
                     <Text style={styles.flightLabel}>Duration</Text>
-                    <Text style={styles.flightValue}>{n(flight.duration)}</Text>
+                    <Text style={styles.flightValue}>
+                      {n(flight.duration)}
+                    </Text>
                   </View>
                   <View style={styles.flightCol}>
                     <Text style={styles.flightLabel}>To</Text>
                     <Text style={styles.flightValueBold}>{n(flight.to)}</Text>
                     <Text style={styles.flightValue}>
                       {n(flight.arrivalDate)} {n(flight.arrivalTime)}
-                      {flight.arrivalTerminal ? ` • Terminal ${flight.arrivalTerminal}` : ""}
+                      {flight.arrivalTerminal
+                        ? ` • Terminal ${flight.arrivalTerminal}`
+                        : ""}
                     </Text>
                   </View>
                 </View>
@@ -387,7 +434,9 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
           ) : null}
           <View style={styles.contactRow}>
             <Text style={styles.contactText}>reservation@maztravel.net</Text>
-            <Text style={styles.contactTextSecond}>01005599399 / 01010737343</Text>
+            <Text style={styles.contactTextSecond}>
+              01005599399 / 01010737343
+            </Text>
           </View>
         </View>
       </Page>
