@@ -12,6 +12,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     backgroundColor: "#ffffff",
     padding: 0,
+    paddingBottom: 74,
     fontFamily: "Helvetica",
   },
   headerBar: {
@@ -20,8 +21,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     backgroundColor: "#1e3a8a",
     paddingHorizontal: 32,
-    paddingVertical: 20,
-    marginBottom: 24,
+    paddingVertical: 16,
+    marginBottom: 16,
   },
   headerLeft: {
     flexDirection: "column",
@@ -55,10 +56,10 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 32,
-    paddingBottom: 32,
+    paddingBottom: 16,
   },
   section: {
-    marginBottom: 20,
+    marginBottom: 14,
   },
   sectionTitle: {
     fontSize: 11,
@@ -75,14 +76,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e2e8f0",
     borderRadius: 4,
-    padding: 12,
-    marginBottom: 10,
+    padding: 10,
+    marginBottom: 8,
   },
   passengerTitle: {
     fontSize: 9,
     fontWeight: "bold",
     color: "#1e3a8a",
-    marginBottom: 8,
+    marginBottom: 6,
     textTransform: "uppercase",
     letterSpacing: 0.4,
   },
@@ -92,12 +93,12 @@ const styles = StyleSheet.create({
   },
   passengerItem: {
     width: "33.33%",
-    marginBottom: 8,
+    marginBottom: 6,
     paddingRight: 12,
   },
   passengerItemWide: {
     width: "50%",
-    marginBottom: 8,
+    marginBottom: 6,
     paddingRight: 12,
   },
   fieldLabel: {
@@ -114,7 +115,7 @@ const styles = StyleSheet.create({
   },
   bookingRow: {
     flexDirection: "row",
-    marginBottom: 12,
+    marginBottom: 6,
   },
   bookingItem: {
     width: "50%",
@@ -125,20 +126,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e2e8f0",
     borderRadius: 4,
-    padding: 14,
-    marginBottom: 14,
+    padding: 10,
+    marginBottom: 10,
   },
   flightCardTitle: {
     fontSize: 10,
     fontWeight: "bold",
     color: "#1e3a8a",
-    marginBottom: 10,
+    marginBottom: 8,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   flightRow: {
     flexDirection: "row",
-    marginBottom: 8,
+    marginBottom: 5,
     alignItems: "flex-start",
   },
   flightColFrom: {
@@ -194,8 +195,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "flex-end",
     alignItems: "center",
-    marginTop: 16,
-    paddingTop: 14,
+    marginTop: 8,
+    paddingTop: 10,
     paddingRight: 16,
     borderTopWidth: 2,
     borderTopColor: "#1e3a8a",
@@ -428,20 +429,10 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
             ))}
           </View>
 
-          {/* Grand total */}
-          {ticket.grandTotal ? (
-            <View style={styles.totalBox}>
-              <Text style={styles.totalLabel}>Grand total</Text>
-              <Text style={styles.totalValue}>
-                {ticket.grandTotal.currency === "EGP" ? "EGP " : "USD "}
-                {ticket.grandTotal.amount.toLocaleString()}
-              </Text>
-            </View>
-          ) : null}
         </View>
 
         {/* Footer */}
-        <View style={styles.footer}>
+        <View fixed style={styles.footer}>
           {ticket.showIssueDateTime ? (
             <Text style={styles.footerText}>Issued on {issuedAt}</Text>
           ) : null}
@@ -451,6 +442,17 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
               01005599399 / 01010737343
             </Text>
           </View>
+
+          {/* Grand total */}
+          {ticket.grandTotal ? (
+            <View style={styles.totalBox} wrap={false}>
+              <Text style={styles.totalLabel}>Grand total</Text>
+              <Text style={styles.totalValue}>
+                {ticket.grandTotal.currency === "EGP" ? "EGP " : "USD "}
+                {ticket.grandTotal.amount.toLocaleString()}
+              </Text>
+            </View>
+          ) : null}
         </View>
       </Page>
     </Document>

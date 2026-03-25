@@ -1,8 +1,8 @@
-// File: D:\Ramy\RTS\ReactJS\maztravel-flight-ticket\app\dashboard\new-ticket\page.tsx
-import * as entry from '../../../../../app/dashboard/new-ticket/page.js'
+// File: D:\Ramy\RTS\ReactJS\maztravel-flight-ticket\app\dashboard\page.tsx
+import * as entry from '../../../../app/dashboard/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
-type TEntry = typeof import('../../../../../app/dashboard/new-ticket/page.js')
+type TEntry = typeof import('../../../../app/dashboard/page.js')
 
 type SegmentParams<T extends Object = any> = T extends Record<string, any>
   ? { [K in keyof T]: T[K] extends string ? string | string[] | undefined : never }
