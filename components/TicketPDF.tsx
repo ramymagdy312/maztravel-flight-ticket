@@ -380,7 +380,7 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Flight details</Text>
             {ticket.flights.map((flight, index) => (
-              <View key={index} style={styles.flightCard}>
+              <View key={index} style={styles.flightCard} wrap={false}>
                 <Text style={styles.flightCardTitle}>
                   Flight {index + 1} • {flight.airline || "—"} •{" "}
                   {flight.flightNumber || "—"}
@@ -446,11 +446,20 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
           {/* Grand total */}
           {ticket.grandTotal ? (
             <View style={styles.totalBox} wrap={false}>
-              <Text style={styles.totalLabel}>Grand total</Text>
-              <Text style={styles.totalValue}>
-                {ticket.grandTotal.currency === "EGP" ? "EGP " : "USD "}
-                {ticket.grandTotal.amount.toLocaleString()}
-              </Text>
+              <Text
+                style={styles.totalLabel}
+                render={({ pageNumber, totalPages }) =>
+                  pageNumber === totalPages ? "Grand total" : ""
+                }
+              />
+              <Text
+                style={styles.totalValue}
+                render={({ pageNumber, totalPages }) =>
+                  pageNumber === totalPages
+                    ? `${ticket.grandTotal?.currency === "EGP" ? "EGP " : "USD "}${ticket.grandTotal?.amount.toLocaleString() ?? ""}`
+                    : ""
+                }
+              />
             </View>
           ) : null}
         </View>
