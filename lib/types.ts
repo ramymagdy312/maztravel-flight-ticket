@@ -33,6 +33,7 @@ export interface FlightDetails {
     currency: "EGP" | "USD";
   };
   showIssueDateTime?: boolean;
+  showCompanyInfo?: boolean;
 }
 
 export interface SavedTicket extends FlightDetails {

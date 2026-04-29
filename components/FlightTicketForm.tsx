@@ -68,6 +68,7 @@ const FlightTicketForm: React.FC = () => {
   const [grandTotalCurrency, setGrandTotalCurrency] =
     useState<"EGP" | "USD">("EGP");
   const [showIssueDateTime, setShowIssueDateTime] = useState(false);
+  const [showCompanyInfo, setShowCompanyInfo] = useState(true);
   const [sending, setSending] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
@@ -182,6 +183,7 @@ const FlightTicketForm: React.FC = () => {
       };
     }
     data.showIssueDateTime = showIssueDateTime;
+    data.showCompanyInfo = showCompanyInfo;
     return data;
   };
 
@@ -225,6 +227,7 @@ const FlightTicketForm: React.FC = () => {
         currency: parsed.grandTotal.currency === "USD" ? "USD" : "EGP",
       };
     }
+    parsed.showCompanyInfo = parsed.showCompanyInfo !== false;
     return parsed;
   };
 
@@ -583,6 +586,18 @@ const FlightTicketForm: React.FC = () => {
             <label htmlFor="showIssueDateTime" className="flex items-center gap-3 cursor-pointer group">
               <input type="checkbox" id="showIssueDateTime" checked={showIssueDateTime} onChange={(e) => setShowIssueDateTime(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
               <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Show ticket issue date & time on PDF</span>
+            </label>
+            <label htmlFor="showCompanyInfo" className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                id="showCompanyInfo"
+                checked={showCompanyInfo}
+                onChange={(e) => setShowCompanyInfo(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                Show company info on PDF (name, email, phone)
+              </span>
             </label>
           </div>
         </section>

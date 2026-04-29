@@ -43,6 +43,10 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "flex-end",
   },
+  headerRightCentered: {
+    alignItems: "center",
+    width: "100%",
+  },
   docTitle: {
     fontSize: 18,
     fontWeight: "bold",
@@ -280,6 +284,7 @@ interface TicketPDFProps {
       currency: "EGP" | "USD";
     };
     showIssueDateTime?: boolean;
+    showCompanyInfo?: boolean;
   };
 }
 
@@ -291,6 +296,7 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
     flights: Array.isArray(ticketProp?.flights) ? ticketProp.flights : [],
     grandTotal: ticketProp?.grandTotal,
     showIssueDateTime: Boolean(ticketProp?.showIssueDateTime),
+    showCompanyInfo: ticketProp?.showCompanyInfo !== false,
   };
 
   const now = new Date();
@@ -310,13 +316,21 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.headerBar}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.brandName}>MAZ TRAVEL</Text>
-            <Text style={styles.brandTagline}>
-              Flight E-Ticket • Reservation & Support
-            </Text>
-          </View>
-          <View style={styles.headerRight}>
+          {ticket.showCompanyInfo ? (
+            <View style={styles.headerLeft}>
+              <Text style={styles.brandName}>MAZ TRAVEL</Text>
+              <Text style={styles.brandTagline}>
+                Flight E-Ticket • Reservation & Support
+              </Text>
+            </View>
+          ) : null}
+          <View
+            style={
+              ticket.showCompanyInfo
+                ? styles.headerRight
+                : [styles.headerRight, styles.headerRightCentered]
+            }
+          >
             <Text style={styles.docTitle}>E-TICKET</Text>
             <Text style={styles.docSubtitle}>PNR: {n(ticket.pnr)}</Text>
           </View>
@@ -436,12 +450,14 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
           {ticket.showIssueDateTime ? (
             <Text style={styles.footerText}>Issued on {issuedAt}</Text>
           ) : null}
-          <View style={styles.contactRow}>
-            <Text style={styles.contactText}>reservation@maztravel.net</Text>
-            <Text style={styles.contactTextSecond}>
-              01005599399 / 01010737343
-            </Text>
-          </View>
+          {ticket.showCompanyInfo ? (
+            <View style={styles.contactRow}>
+              <Text style={styles.contactText}>reservation@maztravel.net</Text>
+              <Text style={styles.contactTextSecond}>
+                01005599399 / 01010737343
+              </Text>
+            </View>
+          ) : null}
 
           {/* Grand total */}
           {ticket.grandTotal ? (
