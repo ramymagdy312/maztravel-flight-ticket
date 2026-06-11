@@ -1,9 +1,5 @@
 {
-  "/login/page": "app/login/page.js",
   "/dashboard/page": "app/dashboard/page.js",
   "/dashboard/tickets/page": "app/dashboard/tickets/page.js",
-  "/dashboard/tickets/[id]/edit/page": "app/dashboard/tickets/[id]/edit/page.js",
-  "/dashboard/new-ticket/page": "app/dashboard/new-ticket/page.js",
-  "/dashboard/airlines/page": "app/dashboard/airlines/page.js",
-  "/dashboard/classes/page": "app/dashboard/classes/page.js"
+  "/dashboard/tickets/[id]/edit/page": "app/dashboard/tickets/[id]/edit/page.js"
 }

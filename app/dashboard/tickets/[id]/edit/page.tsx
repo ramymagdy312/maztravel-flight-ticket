@@ -60,7 +60,7 @@ export default function EditTicketPage() {
         <ArrowLeft className="w-4 h-4" />
         Back to History
       </Link>
-      <FlightTicketForm initialTicket={ticket} />
+      <FlightTicketForm key={ticket.id} initialTicket={ticket} />
     </div>
   );
 }

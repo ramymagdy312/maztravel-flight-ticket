@@ -57,6 +57,15 @@ const emptyFlight: Flight = {
   remark: "",
 };
 
+function buildFlightDetailsFromTicket(ticket: SavedTicket): FlightDetails {
+  return {
+    passengers: ticket.passengers.length > 0 ? ticket.passengers : [{ ...emptyPassenger }],
+    email: ticket.email,
+    pnr: ticket.pnr,
+    flights: ticket.flights.length > 0 ? ticket.flights : [{ ...emptyFlight }],
+  };
+}
+
 const FlightTicketForm: React.FC<FlightTicketFormProps> = ({ initialTicket }) => {
   const router = useRouter();
   const isEditing = Boolean(initialTicket?.id);
@@ -65,38 +74,32 @@ const FlightTicketForm: React.FC<FlightTicketFormProps> = ({ initialTicket }) =>
   const [airlines, setAirlines] = useState<string[]>([]);
   const [ticketClasses, setTicketClasses] = useState<string[]>([]);
 
-  const [flightDetails, setFlightDetails] = useState<FlightDetails>({
-    passengers: [{ ...emptyPassenger }],
-    email: "",
-    pnr: "",
-    flights: [{ ...emptyFlight }],
-  });
+  const [flightDetails, setFlightDetails] = useState<FlightDetails>(() =>
+    initialTicket
+      ? buildFlightDetailsFromTicket(initialTicket)
+      : {
+          passengers: [{ ...emptyPassenger }],
+          email: "",
+          pnr: "",
+          flights: [{ ...emptyFlight }],
+        }
+  );
 
-  const [showGrandTotal, setShowGrandTotal] = useState(false);
-  const [grandTotalAmount, setGrandTotalAmount] = useState("");
-  const [grandTotalCurrency, setGrandTotalCurrency] =
-    useState<"EGP" | "USD">("EGP");
-  const [showIssueDateTime, setShowIssueDateTime] = useState(false);
-  const [showCompanyInfo, setShowCompanyInfo] = useState(true);
+  const [showGrandTotal, setShowGrandTotal] = useState(() => Boolean(initialTicket?.grandTotal));
+  const [grandTotalAmount, setGrandTotalAmount] = useState(() =>
+    initialTicket?.grandTotal ? String(initialTicket.grandTotal.amount) : ""
+  );
+  const [grandTotalCurrency, setGrandTotalCurrency] = useState<"EGP" | "USD">(
+    () => initialTicket?.grandTotal?.currency ?? "EGP"
+  );
+  const [showIssueDateTime, setShowIssueDateTime] = useState(
+    () => initialTicket?.showIssueDateTime ?? false
+  );
+  const [showCompanyInfo, setShowCompanyInfo] = useState(
+    () => initialTicket?.showCompanyInfo ?? true
+  );
   const [saving, setSaving] = useState(false);
   const [downloading, setDownloading] = useState(false);
-
-  useEffect(() => {
-    if (!initialTicket) return;
-    setFlightDetails({
-      passengers: initialTicket.passengers,
-      email: initialTicket.email,
-      pnr: initialTicket.pnr,
-      flights: initialTicket.flights,
-    });
-    if (initialTicket.grandTotal) {
-      setShowGrandTotal(true);
-      setGrandTotalAmount(String(initialTicket.grandTotal.amount));
-      setGrandTotalCurrency(initialTicket.grandTotal.currency);
-    }
-    setShowIssueDateTime(initialTicket.showIssueDateTime ?? false);
-    setShowCompanyInfo(initialTicket.showCompanyInfo ?? true);
-  }, [initialTicket]);
 
   useEffect(() => {
     async function loadSettings() {
@@ -109,7 +112,7 @@ const FlightTicketForm: React.FC<FlightTicketFormProps> = ({ initialTicket }) =>
       setAirlines(airlineNames);
       setTicketClasses(classNames);
 
-      if (airlineNames.length > 0 || classNames.length > 0) {
+      if (!isEditing && (airlineNames.length > 0 || classNames.length > 0)) {
         setFlightDetails((prev) => ({
           ...prev,
           flights: prev.flights.map((f) => ({
@@ -121,7 +124,7 @@ const FlightTicketForm: React.FC<FlightTicketFormProps> = ({ initialTicket }) =>
       }
     }
     loadSettings();
-  }, []);
+  }, [isEditing]);
 
   const calculateDuration = (flight: Flight) => {
     if (
@@ -141,17 +144,23 @@ const FlightTicketForm: React.FC<FlightTicketFormProps> = ({ initialTicket }) =>
     return "";
   };
 
+  const flightScheduleKey = flightDetails.flights
+    .map((f) => `${f.departureDate}${f.departureTime}${f.arrivalDate}${f.arrivalTime}`)
+    .join();
+
   useEffect(() => {
-    const updatedFlights = flightDetails.flights.map((flight) => {
-      const autoDuration = calculateDuration(flight);
-      return { ...flight, duration: flight.duration || autoDuration };
+    setFlightDetails((prev) => {
+      const updatedFlights = prev.flights.map((flight) => {
+        const autoDuration = calculateDuration(flight);
+        return { ...flight, duration: flight.duration || autoDuration };
+      });
+      const unchanged = updatedFlights.every(
+        (f, i) => f.duration === prev.flights[i]?.duration
+      );
+      if (unchanged) return prev;
+      return { ...prev, flights: updatedFlights };
     });
-    setFlightDetails((prev) => ({ ...prev, flights: updatedFlights }));
-  }, [
-    flightDetails.flights
-      .map((f) => `${f.departureDate}${f.departureTime}${f.arrivalDate}${f.arrivalTime}`)
-      .join(),
-  ]);
+  }, [flightScheduleKey]);
 
   // ── Passenger handlers ──
   const handlePassengerChange = (index: number, field: keyof Passenger, value: string) => {
