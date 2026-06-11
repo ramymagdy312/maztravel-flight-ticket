@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { FileText, Trash2, Download, Send, Search, Filter, Loader2, Pencil } from "lucide-react";
+import { FileText, Trash2, Download, Send, Search, Filter, Loader2, Pencil, Share2 } from "lucide-react";
 import { getTickets, deleteTicket } from "@/lib/ticket-store";
+import { shareTicketPdf } from "@/lib/share-ticket";
 import { pdf } from "@react-pdf/renderer";
 import TicketPDF from "@/components/TicketPDF";
 import type { SavedTicket } from "@/lib/types";
@@ -35,6 +36,18 @@ export default function TicketsHistoryPage() {
     const success = await deleteTicket(id);
     if (success) {
       setTickets((prev) => prev.filter((t) => t.id !== id));
+    }
+  };
+
+  const handleShare = async (ticket: SavedTicket) => {
+    try {
+      const blob = await pdf(<TicketPDF ticket={ticket} />).toBlob();
+      const fileName = `flight-ticket-${ticket.pnr || "ticket"}.pdf`;
+      await shareTicketPdf(ticket, blob, fileName);
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
+      console.error("Error sharing PDF:", error);
+      alert("Failed to share PDF. Please try again.");
     }
   };
 
@@ -168,6 +181,13 @@ export default function TicketsHistoryPage() {
                         >
                           <Pencil className="w-4 h-4" />
                         </Link>
+                        <button
+                          onClick={() => handleShare(ticket)}
+                          className="p-2 rounded-lg text-gray-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"
+                          title="Share PDF"
+                        >
+                          <Share2 className="w-4 h-4" />
+                        </button>
                         <button
                           onClick={() => handleRedownload(ticket)}
                           className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"

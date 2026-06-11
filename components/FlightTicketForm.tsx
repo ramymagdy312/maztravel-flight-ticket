@@ -17,12 +17,14 @@ import {
   DollarSign,
   MessageSquare,
   Download,
+  Share2,
   Save,
   Users,
 } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import TicketPDF from "./TicketPDF";
 import { saveTicket, updateTicket } from "@/lib/ticket-store";
+import { shareTicketPdf } from "@/lib/share-ticket";
 import { getAirlines, getTicketClasses } from "@/lib/settings-store";
 import type { Flight, FlightDetails, Passenger, SavedTicket } from "@/lib/types";
 
@@ -100,6 +102,7 @@ const FlightTicketForm: React.FC<FlightTicketFormProps> = ({ initialTicket }) =>
   );
   const [saving, setSaving] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   useEffect(() => {
     async function loadSettings() {
@@ -291,6 +294,30 @@ const FlightTicketForm: React.FC<FlightTicketFormProps> = ({ initialTicket }) =>
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await handleSave();
+  };
+
+  const handleSharePdf = async () => {
+    try {
+      setSharing(true);
+      const ticket = getTicketDataForPdf();
+      const fileName = `flight-ticket-${flightDetails.pnr || "ticket"}.pdf`;
+      const blob = await pdf(<TicketPDF ticket={ticket} />).toBlob();
+
+      await shareTicketPdf(ticket, blob, fileName);
+
+      if (isEditing && ticketId) {
+        await updateTicket(ticketId, ticket, "downloaded");
+      } else {
+        await saveTicket(ticket, "downloaded");
+      }
+      if (isEditing) router.push("/dashboard/tickets");
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
+      console.error("Error sharing PDF:", error);
+      alert("Failed to share PDF. Please try again.");
+    } finally {
+      setSharing(false);
+    }
   };
 
   const handleDownloadPdf = async () => {
@@ -623,15 +650,24 @@ const FlightTicketForm: React.FC<FlightTicketFormProps> = ({ initialTicket }) =>
         </section>
 
         {/* Actions */}
-        <div className="flex flex-col-reverse sm:flex-row gap-3 justify-end pt-2">
+        <div className="flex flex-col-reverse sm:flex-row flex-wrap gap-3 justify-end pt-2">
           <button
             type="button"
             onClick={handleDownloadPdf}
-            disabled={downloading}
+            disabled={downloading || sharing}
             className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className="w-5 h-5" />
             {downloading ? "Generating…" : "Download PDF"}
+          </button>
+          <button
+            type="button"
+            onClick={handleSharePdf}
+            disabled={sharing || downloading}
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Share2 className="w-5 h-5" />
+            {sharing ? "Preparing…" : "Share PDF"}
           </button>
           <button
             type="submit"
