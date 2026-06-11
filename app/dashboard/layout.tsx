@@ -21,7 +21,9 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
 
-  const title = pageTitles[pathname] || "Dashboard";
+  const title = pathname.match(/\/dashboard\/tickets\/[^/]+\/edit/)
+    ? "Edit Ticket"
+    : pageTitles[pathname] || "Dashboard";
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">

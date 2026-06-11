@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { FileText, Trash2, Download, Send, Search, Filter, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { FileText, Trash2, Download, Send, Search, Filter, Loader2, Pencil } from "lucide-react";
 import { getTickets, deleteTicket } from "@/lib/ticket-store";
 import { pdf } from "@react-pdf/renderer";
 import TicketPDF from "@/components/TicketPDF";
@@ -160,6 +161,13 @@ export default function TicketsHistoryPage() {
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center justify-end gap-1">
+                        <Link
+                          href={`/dashboard/tickets/${ticket.id}/edit`}
+                          className="p-2 rounded-lg text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                          title="Edit"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Link>
                         <button
                           onClick={() => handleRedownload(ticket)}
                           className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"

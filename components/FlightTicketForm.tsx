@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Plane,
   Mail,
@@ -16,14 +17,18 @@ import {
   DollarSign,
   MessageSquare,
   Download,
-  Send,
+  Save,
   Users,
 } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import TicketPDF from "./TicketPDF";
-import { saveTicket } from "@/lib/ticket-store";
+import { saveTicket, updateTicket } from "@/lib/ticket-store";
 import { getAirlines, getTicketClasses } from "@/lib/settings-store";
-import type { Flight, FlightDetails, Passenger } from "@/lib/types";
+import type { Flight, FlightDetails, Passenger, SavedTicket } from "@/lib/types";
+
+interface FlightTicketFormProps {
+  initialTicket?: SavedTicket;
+}
 
 const CURRENCIES = ["EGP", "USD"] as const;
 
@@ -52,7 +57,11 @@ const emptyFlight: Flight = {
   remark: "",
 };
 
-const FlightTicketForm: React.FC = () => {
+const FlightTicketForm: React.FC<FlightTicketFormProps> = ({ initialTicket }) => {
+  const router = useRouter();
+  const isEditing = Boolean(initialTicket?.id);
+  const [ticketId] = useState(initialTicket?.id);
+
   const [airlines, setAirlines] = useState<string[]>([]);
   const [ticketClasses, setTicketClasses] = useState<string[]>([]);
 
@@ -69,8 +78,25 @@ const FlightTicketForm: React.FC = () => {
     useState<"EGP" | "USD">("EGP");
   const [showIssueDateTime, setShowIssueDateTime] = useState(false);
   const [showCompanyInfo, setShowCompanyInfo] = useState(true);
-  const [sending, setSending] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [downloading, setDownloading] = useState(false);
+
+  useEffect(() => {
+    if (!initialTicket) return;
+    setFlightDetails({
+      passengers: initialTicket.passengers,
+      email: initialTicket.email,
+      pnr: initialTicket.pnr,
+      flights: initialTicket.flights,
+    });
+    if (initialTicket.grandTotal) {
+      setShowGrandTotal(true);
+      setGrandTotalAmount(String(initialTicket.grandTotal.amount));
+      setGrandTotalCurrency(initialTicket.grandTotal.currency);
+    }
+    setShowIssueDateTime(initialTicket.showIssueDateTime ?? false);
+    setShowCompanyInfo(initialTicket.showCompanyInfo ?? true);
+  }, [initialTicket]);
 
   useEffect(() => {
     async function loadSettings() {
@@ -232,54 +258,30 @@ const FlightTicketForm: React.FC = () => {
   };
 
   // ── Actions ──
-  const sendEmail = async () => {
+  const handleSave = async () => {
     try {
-      setSending(true);
+      setSaving(true);
       const ticketData = getTicketDataForPdf();
-      const pdfBlob = await pdf(<TicketPDF ticket={ticketData} />).toBlob();
-      const pdfBase64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64 = reader.result as string;
-          resolve(base64.split(",")[1]);
-        };
-        reader.readAsDataURL(pdfBlob);
-      });
+      const status = isEditing && initialTicket ? initialTicket.status : "draft";
 
-      const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      if (!baseUrl || !anonKey) {
-        throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
+      if (isEditing && ticketId) {
+        await updateTicket(ticketId, ticketData, status);
+      } else {
+        await saveTicket(ticketData, "draft");
       }
-
-      const response = await fetch(`${baseUrl}/functions/v1/send-ticket`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${anonKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          pdfBase64,
-          recipientEmail: flightDetails.email,
-          subject: `Flight Ticket - PNR: ${flightDetails.pnr}`,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to send email");
-
-      await saveTicket(ticketData, "sent");
-      alert("Ticket has been sent to your email!");
+      alert("Ticket saved successfully!");
+      router.push("/dashboard/tickets");
     } catch (error) {
-      console.error("Error sending email:", error);
-      alert("Failed to send email. Please try again.");
+      console.error("Error saving ticket:", error);
+      alert("Failed to save ticket. Please try again.");
     } finally {
-      setSending(false);
+      setSaving(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await sendEmail();
+    await handleSave();
   };
 
   const handleDownloadPdf = async () => {
@@ -295,7 +297,12 @@ const FlightTicketForm: React.FC = () => {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      await saveTicket(ticket, "downloaded");
+      if (isEditing && ticketId) {
+        await updateTicket(ticketId, ticket, "downloaded");
+      } else {
+        await saveTicket(ticket, "downloaded");
+      }
+      if (isEditing) router.push("/dashboard/tickets");
     } catch (error) {
       console.error("Error generating PDF:", error);
       const message = error instanceof Error ? error.message : "Failed to generate PDF.";
@@ -319,8 +326,12 @@ const FlightTicketForm: React.FC = () => {
             <img src="/Logo.png" alt="Maz Travel" className="h-10 w-auto object-contain" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Flight E-Ticket</h1>
-            <p className="text-blue-100 text-sm mt-0.5">Enter booking and passenger details</p>
+            <h1 className="text-xl font-bold tracking-tight">
+              {isEditing ? "Edit Flight E-Ticket" : "Flight E-Ticket"}
+            </h1>
+            <p className="text-blue-100 text-sm mt-0.5">
+              {isEditing ? "Update booking and passenger details" : "Enter booking and passenger details"}
+            </p>
           </div>
         </div>
       </div>
@@ -615,11 +626,11 @@ const FlightTicketForm: React.FC = () => {
           </button>
           <button
             type="submit"
-            disabled={sending}
+            disabled={saving}
             className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/25 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Send className="w-5 h-5" />
-            {sending ? "Sending…" : "Send to email"}
+            <Save className="w-5 h-5" />
+            {saving ? "Saving…" : "Save"}
           </button>
         </div>
       </form>

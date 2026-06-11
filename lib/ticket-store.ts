@@ -57,6 +57,57 @@ export async function saveTicket(
   return mapRowToTicket(data);
 }
 
+export async function getTicketById(id: string): Promise<SavedTicket | null> {
+  const client = supabase();
+  if (!client) return null;
+
+  const { data, error } = await client
+    .from("tickets")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    console.error("Error fetching ticket:", error);
+    return null;
+  }
+
+  return mapRowToTicket(data);
+}
+
+export async function updateTicket(
+  id: string,
+  ticket: FlightDetails,
+  status: SavedTicket["status"]
+): Promise<SavedTicket | null> {
+  const client = supabase();
+  if (!client) return null;
+
+  const row = {
+    passengers: ticket.passengers,
+    email: ticket.email,
+    pnr: ticket.pnr,
+    flights: ticket.flights,
+    grand_total: ticket.grandTotal || null,
+    show_issue_date_time: ticket.showIssueDateTime || false,
+    status,
+  };
+
+  const { data, error } = await client
+    .from("tickets")
+    .update(row)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error updating ticket:", error);
+    return null;
+  }
+
+  return mapRowToTicket(data);
+}
+
 export async function deleteTicket(id: string): Promise<boolean> {
   const client = supabase();
   if (!client) return false;
