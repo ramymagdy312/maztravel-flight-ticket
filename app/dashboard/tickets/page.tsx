@@ -9,6 +9,81 @@ import { pdf } from "@react-pdf/renderer";
 import TicketPDF from "@/components/TicketPDF";
 import type { SavedTicket } from "@/lib/types";
 
+function TicketStatusBadge({ status }: { status: SavedTicket["status"] }) {
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full ${
+        status === "sent"
+          ? "bg-emerald-50 text-emerald-700"
+          : status === "downloaded"
+          ? "bg-violet-50 text-violet-700"
+          : "bg-gray-100 text-gray-600"
+      }`}
+    >
+      {status === "sent" && <Send className="w-3 h-3" />}
+      {status === "downloaded" && <Download className="w-3 h-3" />}
+      {status}
+    </span>
+  );
+}
+
+function TicketActions({
+  ticket,
+  onShare,
+  onDownload,
+  onDelete,
+  compact = false,
+}: {
+  ticket: SavedTicket;
+  onShare: (ticket: SavedTicket) => void;
+  onDownload: (ticket: SavedTicket) => void;
+  onDelete: (id: string) => void;
+  compact?: boolean;
+}) {
+  const btnClass = compact
+    ? "flex flex-1 flex-col items-center gap-1 rounded-lg py-2 text-gray-500 hover:bg-gray-50 transition-colors"
+    : "p-2 rounded-lg text-gray-400 hover:bg-gray-50 transition-colors";
+
+  const iconClass = compact ? "w-4 h-4" : "w-4 h-4";
+
+  return (
+    <div className={compact ? "grid grid-cols-4 gap-1" : "flex items-center justify-end gap-1"}>
+      <Link
+        href={`/dashboard/tickets/${ticket.id}/edit`}
+        className={`${btnClass} hover:text-amber-600 hover:bg-amber-50`}
+        title="Edit"
+      >
+        <Pencil className={iconClass} />
+        {compact && <span className="text-[10px] font-medium">Edit</span>}
+      </Link>
+      <button
+        onClick={() => onShare(ticket)}
+        className={`${btnClass} hover:text-violet-600 hover:bg-violet-50`}
+        title="Share PDF"
+      >
+        <Share2 className={iconClass} />
+        {compact && <span className="text-[10px] font-medium">Share</span>}
+      </button>
+      <button
+        onClick={() => onDownload(ticket)}
+        className={`${btnClass} hover:text-blue-600 hover:bg-blue-50`}
+        title="Download PDF"
+      >
+        <Download className={iconClass} />
+        {compact && <span className="text-[10px] font-medium">Download</span>}
+      </button>
+      <button
+        onClick={() => onDelete(ticket.id)}
+        className={`${btnClass} hover:text-red-600 hover:bg-red-50`}
+        title="Delete"
+      >
+        <Trash2 className={iconClass} />
+        {compact && <span className="text-[10px] font-medium">Delete</span>}
+      </button>
+    </div>
+  );
+}
+
 export default function TicketsHistoryPage() {
   const [tickets, setTickets] = useState<SavedTicket[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -87,7 +162,7 @@ export default function TicketsHistoryPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
@@ -105,7 +180,7 @@ export default function TicketsHistoryPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="pl-10 pr-8 py-2.5 rounded-xl bg-white border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none appearance-none cursor-pointer"
+            className="w-full sm:w-auto pl-10 pr-8 py-2.5 rounded-xl bg-white border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none appearance-none cursor-pointer"
           >
             <option value="all">All Status</option>
             <option value="sent">Sent</option>
@@ -115,7 +190,6 @@ export default function TicketsHistoryPage() {
         </div>
       </div>
 
-      {/* Table */}
       {filtered.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200/80 p-12 text-center">
           <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -128,14 +202,62 @@ export default function TicketsHistoryPage() {
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-gray-200/80 overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Mobile cards */}
+          <div className="md:hidden divide-y divide-gray-100">
+            {filtered.map((ticket) => (
+              <div key={ticket.id} className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-gray-800 text-sm leading-snug break-words">
+                      {ticket.passengers.map((p) => p.name).join(", ") || "—"}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5 break-all">{ticket.email}</p>
+                  </div>
+                  <TicketStatusBadge status={ticket.status} />
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                  <div>
+                    <p className="text-gray-400 mb-0.5">PNR</p>
+                    <p className="font-mono font-medium text-gray-700">{ticket.pnr}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400 mb-0.5">Date</p>
+                    <p className="text-gray-600">{new Date(ticket.createdAt).toLocaleDateString()}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-gray-400 mb-0.5">Route</p>
+                    <p className="text-gray-600">
+                      {ticket.flights[0]?.from} → {ticket.flights[0]?.to}
+                      {ticket.flights.length > 1 && (
+                        <span className="text-gray-400 ml-1">(+{ticket.flights.length - 1})</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-gray-100">
+                  <TicketActions
+                    ticket={ticket}
+                    onShare={handleShare}
+                    onDownload={handleRedownload}
+                    onDelete={handleDelete}
+                    compact
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50/80">
                   <th className="text-left py-3 px-4 font-semibold text-gray-600">Passenger</th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-600">PNR</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden md:table-cell">Route</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Date</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-600">Route</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-600">Date</th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-600">Status</th>
                   <th className="text-right py-3 px-4 font-semibold text-gray-600">Actions</th>
                 </tr>
@@ -148,67 +270,32 @@ export default function TicketsHistoryPage() {
                       <p className="text-xs text-gray-400">{ticket.email}</p>
                     </td>
                     <td className="py-3 px-4 font-mono text-gray-700">{ticket.pnr}</td>
-                    <td className="py-3 px-4 hidden md:table-cell text-gray-600">
+                    <td className="py-3 px-4 text-gray-600">
                       {ticket.flights[0]?.from} → {ticket.flights[0]?.to}
                       {ticket.flights.length > 1 && (
                         <span className="text-xs text-gray-400 ml-1">(+{ticket.flights.length - 1})</span>
                       )}
                     </td>
-                    <td className="py-3 px-4 hidden sm:table-cell text-gray-500">
+                    <td className="py-3 px-4 text-gray-500">
                       {new Date(ticket.createdAt).toLocaleDateString()}
                     </td>
                     <td className="py-3 px-4">
-                      <span
-                        className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full ${
-                          ticket.status === "sent"
-                            ? "bg-emerald-50 text-emerald-700"
-                            : ticket.status === "downloaded"
-                            ? "bg-violet-50 text-violet-700"
-                            : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {ticket.status === "sent" && <Send className="w-3 h-3" />}
-                        {ticket.status === "downloaded" && <Download className="w-3 h-3" />}
-                        {ticket.status}
-                      </span>
+                      <TicketStatusBadge status={ticket.status} />
                     </td>
                     <td className="py-3 px-4">
-                      <div className="flex items-center justify-end gap-1">
-                        <Link
-                          href={`/dashboard/tickets/${ticket.id}/edit`}
-                          className="p-2 rounded-lg text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
-                          title="Edit"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </Link>
-                        <button
-                          onClick={() => handleShare(ticket)}
-                          className="p-2 rounded-lg text-gray-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"
-                          title="Share PDF"
-                        >
-                          <Share2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleRedownload(ticket)}
-                          className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                          title="Download PDF"
-                        >
-                          <Download className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(ticket.id)}
-                          className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      <TicketActions
+                        ticket={ticket}
+                        onShare={handleShare}
+                        onDownload={handleRedownload}
+                        onDelete={handleDelete}
+                      />
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+
           <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/50 text-sm text-gray-500">
             Showing {filtered.length} of {tickets.length} tickets
           </div>
