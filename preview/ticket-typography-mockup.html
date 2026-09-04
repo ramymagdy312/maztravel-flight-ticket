@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Maz Travel e-ticket mockup — typography preview</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      background: #ffffff;
+      font-family: Helvetica, Arial, sans-serif;
+      width: 794px;
+      height: 1123px;
+      overflow: hidden;
+    }
+    .page {
+      width: 794px;
+      height: 1123px;
+      background: #ffffff;
+      position: relative;
+      overflow: hidden;
+      padding-bottom: 74pt;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1e3a8a;
+      padding: 16pt 32pt;
+      margin-bottom: 16pt;
+    }
+    .brand-name {
+      font-size: 22pt;
+      font-weight: bold;
+      color: #ffffff;
+      letter-spacing: 0.5pt;
+      margin-bottom: 4pt;
+    }
+    .brand-tagline {
+      font-size: 9pt;
+      color: rgba(255,255,255,0.85);
+      letter-spacing: 0.3pt;
+    }
+    .header-right { text-align: right; }
+    .doc-title {
+      font-size: 18pt;
+      font-weight: bold;
+      color: #ffffff;
+      letter-spacing: 0.5pt;
+    }
+    .doc-pnr {
+      font-size: 13pt;
+      font-weight: bold;
+      color: #ffffff;
+      letter-spacing: 2.2pt;
+      margin-top: 3pt;
+    }
+    .content { padding: 0 32pt 16pt; }
+    .section { margin-bottom: 14pt; }
+    .section-title {
+      font-size: 11pt;
+      font-weight: bold;
+      color: #1e3a8a;
+      margin-bottom: 10pt;
+      padding-bottom: 4pt;
+      border-bottom: 2pt solid #1e3a8a;
+      letter-spacing: 0.5pt;
+    }
+    .booking-row { display: flex; margin-bottom: 6pt; }
+    .booking-item { width: 50%; padding-right: 16pt; }
+    .field-label {
+      font-size: 7pt;
+      color: #64748b;
+      margin-bottom: 1pt;
+      text-transform: uppercase;
+      letter-spacing: 0.4pt;
+    }
+    .field-value {
+      font-size: 10pt;
+      color: #0f172a;
+      font-weight: bold;
+    }
+    .pnr-badge {
+      display: inline-block;
+      background: #dbeafe;
+      border: 1pt solid #93c5fd;
+      border-radius: 3pt;
+      padding: 3pt 10pt 4pt;
+      margin-top: 1pt;
+    }
+    .pnr-value {
+      font-size: 17pt;
+      font-weight: bold;
+      color: #1e3a8a;
+      letter-spacing: 2.4pt;
+      line-height: 1.15;
+    }
+    .card {
+      background: #f8fafc;
+      border: 1pt solid #e2e8f0;
+      border-radius: 4pt;
+      padding: 10pt;
+      margin-bottom: 8pt;
+    }
+    .flight-card { margin-bottom: 10pt; }
+    .passenger-kicker {
+      font-size: 8pt;
+      font-weight: bold;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5pt;
+      margin-bottom: 2pt;
+    }
+    .passenger-name {
+      font-size: 13.5pt;
+      font-weight: bold;
+      color: #1e3a8a;
+      letter-spacing: 0.3pt;
+      margin-bottom: 8pt;
+    }
+    .grid { display: flex; flex-wrap: wrap; }
+    .item { width: 33.33%; margin-bottom: 6pt; padding-right: 12pt; }
+    .item-wide { width: 50%; margin-bottom: 6pt; padding-right: 12pt; }
+    .flight-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: flex-start;
+      gap: 8pt;
+      margin-bottom: 8pt;
+    }
+    .flight-title {
+      font-size: 10pt;
+      font-weight: bold;
+      color: #1e3a8a;
+      text-transform: uppercase;
+      letter-spacing: 0.5pt;
+    }
+    .flight-number {
+      font-size: 16pt;
+      font-weight: bold;
+      color: #1e3a8a;
+      letter-spacing: 1pt;
+      line-height: 1;
+    }
+    .flight-row {
+      display: flex;
+      margin-bottom: 5pt;
+      align-items: flex-start;
+    }
+    .col-from, .col-to { width: 40%; padding-right: 8pt; }
+    .col-duration { width: 20%; padding-right: 8pt; text-align: center; }
+    .flight-label {
+      font-size: 8pt;
+      color: #64748b;
+      margin-bottom: 1pt;
+      text-transform: uppercase;
+    }
+    .flight-value { font-size: 10pt; color: #0f172a; }
+    .flight-value-bold { font-size: 10pt; color: #0f172a; font-weight: bold; }
+    .flight-date {
+      font-size: 8pt;
+      color: #64748b;
+      margin-top: 4pt;
+    }
+    .flight-time {
+      font-size: 15.5pt;
+      font-weight: bold;
+      color: #1e3a8a;
+      letter-spacing: 0.4pt;
+      line-height: 1.15;
+    }
+    .col-class { width: 50%; }
+    .remark {
+      margin-top: 10pt;
+      padding: 8pt;
+      background: #f1f5f9;
+      border-radius: 2pt;
+      border-left: 3pt solid #1e3a8a;
+    }
+    .remark-label {
+      font-size: 8pt;
+      color: #64748b;
+      margin-bottom: 2pt;
+      text-transform: uppercase;
+    }
+    .remark-text { font-size: 9pt; color: #334155; }
+    .footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 12pt 32pt;
+      border-top: 1pt solid #e2e8f0;
+      background: #f8fafc;
+    }
+    .contact-row {
+      display: flex;
+      justify-content: center;
+      margin-top: 2pt;
+    }
+    .contact { font-size: 8pt; color: #475569; }
+    .contact + .contact { margin-left: 16pt; }
+    .total-box {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin-top: 8pt;
+      padding-top: 10pt;
+      padding-right: 16pt;
+      border-top: 2pt solid #1e3a8a;
+    }
+    .total-label {
+      font-size: 12pt;
+      font-weight: bold;
+      color: #1e3a8a;
+      margin-right: 12pt;
+    }
+    .total-value {
+      font-size: 14pt;
+      font-weight: bold;
+      color: #1e3a8a;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div>
+        <div class="brand-name">MAZ TRAVEL</div>
+        <div class="brand-tagline">Flight E-Ticket • Reservation &amp; Support</div>
+      </div>
+      <div class="header-right">
+        <div class="doc-title">E-TICKET</div>
+        <div class="doc-pnr">PNR: 4HZ9KP</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="section">
+        <div class="section-title">Booking information</div>
+        <div class="booking-row">
+          <div class="booking-item">
+            <div class="field-label">PNR</div>
+            <div class="pnr-badge"><span class="pnr-value">4HZ9KP</span></div>
+          </div>
+          <div class="booking-item">
+            <div class="field-label">Email</div>
+            <div class="field-value">passenger@email.com</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Passenger details (1)</div>
+        <div class="card">
+          <div class="passenger-kicker">Passenger 1</div>
+          <div class="passenger-name">AHMED HASSAN MOHAMED</div>
+          <div class="grid">
+            <div class="item">
+              <div class="field-label">Ticket number</div>
+              <div class="field-value">077-2458910367</div>
+            </div>
+            <div class="item">
+              <div class="field-label">Seat</div>
+              <div class="field-value">12A</div>
+            </div>
+            <div class="item">
+              <div class="field-label">Frequent flyer</div>
+              <div class="field-value">MS12345678</div>
+            </div>
+            <div class="item-wide">
+              <div class="field-label">Baggage</div>
+              <div class="field-value">2P Cabin: 5-7Kg</div>
+            </div>
+            <div class="item-wide">
+              <div class="field-label">Meals</div>
+              <div class="field-value">Standard</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Flight details</div>
+        <div class="card flight-card">
+          <div class="flight-head">
+            <div class="flight-title">Flight 1 • EgyptAir</div>
+            <div class="flight-number">MS - 184</div>
+          </div>
+          <div class="flight-row">
+            <div class="col-from">
+              <div class="flight-label">From</div>
+              <div class="flight-value-bold">Cairo International (CAI)</div>
+              <div class="flight-value">Terminal 3</div>
+              <div class="flight-date">15 Sep 2026</div>
+              <div class="flight-time">08:45</div>
+            </div>
+            <div class="col-duration">
+              <div class="flight-label">Duration</div>
+              <div class="flight-value">2h 35m</div>
+            </div>
+            <div class="col-to">
+              <div class="flight-label">To</div>
+              <div class="flight-value-bold">King Abdulaziz (JED)</div>
+              <div class="flight-value">Terminal 1</div>
+              <div class="flight-date">15 Sep 2026</div>
+              <div class="flight-time">11:20</div>
+            </div>
+          </div>
+          <div class="flight-row">
+            <div class="col-class">
+              <div class="flight-label">Class</div>
+              <div class="flight-value">Economy</div>
+            </div>
+          </div>
+          <div class="remark">
+            <div class="remark-label">Remark</div>
+            <div class="remark-text">Please arrive at the airport 3 hours before departure.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="contact-row">
+        <div class="contact">reservation@maztravel.net</div>
+        <div class="contact">01005599399 / 01010737343</div>
+      </div>
+      <div class="total-box">
+        <div class="total-label">Grand total</div>
+        <div class="total-value">EGP 12,500</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

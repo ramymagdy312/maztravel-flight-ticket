@@ -54,9 +54,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   docSubtitle: {
-    fontSize: 9,
-    color: "rgba(255,255,255,0.85)",
-    marginTop: 2,
+    fontSize: 13,
+    fontWeight: "bold",
+    color: "#ffffff",
+    letterSpacing: 2.2,
+    marginTop: 3,
   },
   content: {
     paddingHorizontal: 32,
@@ -84,12 +86,19 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   passengerTitle: {
-    fontSize: 9,
+    fontSize: 8,
+    fontWeight: "bold",
+    color: "#64748b",
+    marginBottom: 2,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  passengerName: {
+    fontSize: 13.5,
     fontWeight: "bold",
     color: "#1e3a8a",
-    marginBottom: 6,
-    textTransform: "uppercase",
-    letterSpacing: 0.4,
+    letterSpacing: 0.3,
+    marginBottom: 8,
   },
   passengerGrid: {
     flexDirection: "row",
@@ -117,6 +126,22 @@ const styles = StyleSheet.create({
     color: "#0f172a",
     fontWeight: "bold",
   },
+  pnrBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "#dbeafe",
+    borderWidth: 1,
+    borderColor: "#93c5fd",
+    borderRadius: 3,
+    paddingVertical: 3,
+    paddingHorizontal: 10,
+    marginTop: 1,
+  },
+  pnrValue: {
+    fontSize: 17,
+    fontWeight: "bold",
+    color: "#1e3a8a",
+    letterSpacing: 2.4,
+  },
   bookingRow: {
     flexDirection: "row",
     marginBottom: 6,
@@ -133,13 +158,35 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 10,
   },
+  flightHead: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    marginBottom: 8,
+  },
   flightCardTitle: {
     fontSize: 10,
     fontWeight: "bold",
     color: "#1e3a8a",
-    marginBottom: 8,
     textTransform: "uppercase",
     letterSpacing: 0.5,
+  },
+  flightNumberValue: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#1e3a8a",
+    letterSpacing: 1,
+    marginLeft: 8,
+  },
+  flightDateValue: {
+    fontSize: 8,
+    color: "#64748b",
+    marginTop: 4,
+  },
+  flightTimeValue: {
+    fontSize: 15.5,
+    fontWeight: "bold",
+    color: "#1e3a8a",
+    letterSpacing: 0.4,
   },
   flightRow: {
     flexDirection: "row",
@@ -343,7 +390,9 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
             <View style={styles.bookingRow}>
               <View style={styles.bookingItem}>
                 <Text style={styles.fieldLabel}>PNR</Text>
-                <Text style={styles.fieldValue}>{n(ticket.pnr)}</Text>
+                <View style={styles.pnrBadge}>
+                  <Text style={styles.pnrValue}>{n(ticket.pnr)}</Text>
+                </View>
               </View>
               <View style={styles.bookingItem}>
                 <Text style={styles.fieldLabel}>Email</Text>
@@ -359,9 +408,8 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
             </Text>
             {ticket.passengers.map((p, i) => (
               <View key={i} style={styles.passengerCard}>
-                <Text style={styles.passengerTitle}>
-                  Passenger {i + 1} — {n(p.name)}
-                </Text>
+                <Text style={styles.passengerTitle}>Passenger {i + 1}</Text>
+                <Text style={styles.passengerName}>{n(p.name)}</Text>
                 <View style={styles.passengerGrid}>
                   <View style={styles.passengerItem}>
                     <Text style={styles.fieldLabel}>Ticket number</Text>
@@ -395,10 +443,14 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
             <Text style={styles.sectionTitle}>Flight details</Text>
             {ticket.flights.map((flight, index) => (
               <View key={index} style={styles.flightCard} wrap={false}>
-                <Text style={styles.flightCardTitle}>
-                  Flight {index + 1} • {flight.airline || "—"} •{" "}
-                  {flight.flightNumber || "—"}
-                </Text>
+                <View style={styles.flightHead}>
+                  <Text style={styles.flightCardTitle}>
+                    Flight {index + 1} • {flight.airline || "—"}
+                  </Text>
+                  <Text style={styles.flightNumberValue}>
+                    {flight.flightNumber || "—"}
+                  </Text>
+                </View>
                 <View style={styles.flightRow}>
                   <View style={styles.flightColFrom}>
                     <Text style={styles.flightLabel}>From</Text>
@@ -406,8 +458,11 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
                     {flight.terminal ? (
                       <Text style={styles.flightValue}>Terminal {flight.terminal}</Text>
                     ) : null}
-                    <Text style={styles.flightValue}>
-                      {n(flight.departureDate)}  {n(flight.departureTime)}
+                    <Text style={styles.flightDateValue}>
+                      {n(flight.departureDate)}
+                    </Text>
+                    <Text style={styles.flightTimeValue}>
+                      {n(flight.departureTime)}
                     </Text>
                   </View>
                   <View style={styles.flightColDuration}>
@@ -422,8 +477,11 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
                     {flight.arrivalTerminal ? (
                       <Text style={styles.flightValue}>Terminal {flight.arrivalTerminal}</Text>
                     ) : null}
-                    <Text style={styles.flightValue}>
-                      {n(flight.arrivalDate)}  {n(flight.arrivalTime)}
+                    <Text style={styles.flightDateValue}>
+                      {n(flight.arrivalDate)}
+                    </Text>
+                    <Text style={styles.flightTimeValue}>
+                      {n(flight.arrivalTime)}
                     </Text>
                   </View>
                 </View>
