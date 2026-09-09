@@ -178,15 +178,18 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   flightDateValue: {
-    fontSize: 8,
-    color: "#64748b",
-    marginTop: 4,
+    fontSize: 13.5,
+    fontWeight: "bold",
+    color: "#1e3a8a",
+    letterSpacing: 0.3,
+    marginTop: 6,
   },
   flightTimeValue: {
     fontSize: 15.5,
     fontWeight: "bold",
     color: "#1e3a8a",
     letterSpacing: 0.4,
+    marginTop: 1,
   },
   flightRow: {
     flexDirection: "row",
@@ -358,6 +361,25 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
   const n = (s: string | undefined) =>
     s != null && String(s).trim() !== "" ? String(s) : "—";
 
+  const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const MONTHS = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  ];
+
+  const formatTicketDate = (value: string | undefined) => {
+    if (value == null || String(value).trim() === "") return "—";
+    const raw = String(value).trim();
+    const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!match) return raw;
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const parsed = new Date(Date.UTC(year, month - 1, day));
+    if (Number.isNaN(parsed.getTime())) return raw;
+    return `${WEEKDAYS[parsed.getUTCDay()]} ${day} ${MONTHS[month - 1]} ${year}`;
+  };
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -459,7 +481,7 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
                       <Text style={styles.flightValue}>Terminal {flight.terminal}</Text>
                     ) : null}
                     <Text style={styles.flightDateValue}>
-                      {n(flight.departureDate)}
+                      {formatTicketDate(flight.departureDate)}
                     </Text>
                     <Text style={styles.flightTimeValue}>
                       {n(flight.departureTime)}
@@ -478,7 +500,7 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
                       <Text style={styles.flightValue}>Terminal {flight.arrivalTerminal}</Text>
                     ) : null}
                     <Text style={styles.flightDateValue}>
-                      {n(flight.arrivalDate)}
+                      {formatTicketDate(flight.arrivalDate)}
                     </Text>
                     <Text style={styles.flightTimeValue}>
                       {n(flight.arrivalTime)}
