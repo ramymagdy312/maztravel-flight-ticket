@@ -4,8 +4,14 @@ import {
   Page,
   Text,
   View,
+  Image,
   StyleSheet,
 } from "@react-pdf/renderer";
+
+const mazLogoSrc =
+  typeof window !== "undefined"
+    ? `${window.location.origin}/Logo.png`
+    : "/Logo.png";
 
 const styles = StyleSheet.create({
   page: {
@@ -25,7 +31,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   headerLeft: {
-    flexDirection: "column",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  logoBox: {
+    backgroundColor: "#ffffff",
+    borderRadius: 6,
+    padding: 4,
+    marginRight: 12,
+  },
+  logo: {
+    width: 54,
+    height: 54,
+    objectFit: "contain",
   },
   brandName: {
     fontSize: 22,
@@ -387,10 +405,15 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
         <View style={styles.headerBar}>
           {ticket.showCompanyInfo ? (
             <View style={styles.headerLeft}>
-              <Text style={styles.brandName}>MAZ TRAVEL</Text>
-              <Text style={styles.brandTagline}>
-                Flight E-Ticket • Reservation & Support
-              </Text>
+              <View style={styles.logoBox}>
+                <Image src={mazLogoSrc} style={styles.logo} />
+              </View>
+              <View>
+                <Text style={styles.brandName}>MAZ TRAVEL</Text>
+                <Text style={styles.brandTagline}>
+                  Flight E-Ticket • Reservation & Support
+                </Text>
+              </View>
             </View>
           ) : null}
           <View
