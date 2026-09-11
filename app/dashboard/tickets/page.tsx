@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { FileText, Trash2, Download, Send, Search, Filter, Loader2, Pencil, Share2 } from "lucide-react";
+import { FileText, Trash2, Download, Send, Search, Filter, Loader2, Pencil, Share2, CopyPlus } from "lucide-react";
 import { getTickets, deleteTicket } from "@/lib/ticket-store";
 import { shareTicketPdf } from "@/lib/share-ticket";
 import { pdf } from "@react-pdf/renderer";
@@ -47,7 +47,7 @@ function TicketActions({
   const iconClass = compact ? "w-4 h-4" : "w-4 h-4";
 
   return (
-    <div className={compact ? "grid grid-cols-4 gap-1" : "flex items-center justify-end gap-1"}>
+    <div className={compact ? "grid grid-cols-5 gap-1" : "flex items-center justify-end gap-1"}>
       <Link
         href={`/dashboard/tickets/${ticket.id}/edit`}
         className={`${btnClass} hover:text-amber-600 hover:bg-amber-50`}
@@ -55,6 +55,14 @@ function TicketActions({
       >
         <Pencil className={iconClass} />
         {compact && <span className="text-[10px] font-medium">Edit</span>}
+      </Link>
+      <Link
+        href={`/dashboard/tickets/${ticket.id}/clone`}
+        className={`${btnClass} hover:text-teal-600 hover:bg-teal-50`}
+        title="Clone ticket"
+      >
+        <CopyPlus className={iconClass} />
+        {compact && <span className="text-[10px] font-medium">Clone</span>}
       </Link>
       <button
         onClick={() => onShare(ticket)}

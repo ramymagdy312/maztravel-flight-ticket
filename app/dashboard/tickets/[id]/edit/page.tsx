@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, CopyPlus, Loader2 } from "lucide-react";
 import FlightTicketForm from "@/components/FlightTicketForm";
 import { getTicketById } from "@/lib/ticket-store";
 import type { SavedTicket } from "@/lib/types";
@@ -53,13 +53,22 @@ export default function EditTicketPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
-      <Link
-        href="/dashboard/tickets"
-        className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 font-medium transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to History
-      </Link>
+      <div className="flex items-center justify-between gap-3">
+        <Link
+          href="/dashboard/tickets"
+          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 font-medium transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to History
+        </Link>
+        <Link
+          href={`/dashboard/tickets/${ticket.id}/clone`}
+          className="inline-flex items-center gap-2 text-sm text-teal-700 hover:text-teal-800 font-medium transition-colors"
+        >
+          <CopyPlus className="w-4 h-4" />
+          Clone ticket
+        </Link>
+      </div>
       <FlightTicketForm key={ticket.id} initialTicket={ticket} />
     </div>
   );

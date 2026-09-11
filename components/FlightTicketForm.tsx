@@ -30,6 +30,7 @@ import type { Flight, FlightDetails, Passenger, SavedTicket } from "@/lib/types"
 
 interface FlightTicketFormProps {
   initialTicket?: SavedTicket;
+  isClone?: boolean;
 }
 
 const CURRENCIES = ["EGP", "USD"] as const;
@@ -61,17 +62,29 @@ const emptyFlight: Flight = {
 
 function buildFlightDetailsFromTicket(ticket: SavedTicket): FlightDetails {
   return {
-    passengers: ticket.passengers.length > 0 ? ticket.passengers : [{ ...emptyPassenger }],
+    passengers:
+      ticket.passengers.length > 0
+        ? ticket.passengers.map((p) => ({ ...p }))
+        : [{ ...emptyPassenger }],
     email: ticket.email,
     pnr: ticket.pnr,
-    flights: ticket.flights.length > 0 ? ticket.flights : [{ ...emptyFlight }],
+    flights:
+      ticket.flights.length > 0
+        ? ticket.flights.map((f) => ({ ...f }))
+        : [{ ...emptyFlight }],
+    grandTotal: ticket.grandTotal ? { ...ticket.grandTotal } : undefined,
+    showIssueDateTime: ticket.showIssueDateTime,
+    showCompanyInfo: ticket.showCompanyInfo,
   };
 }
 
-const FlightTicketForm: React.FC<FlightTicketFormProps> = ({ initialTicket }) => {
+const FlightTicketForm: React.FC<FlightTicketFormProps> = ({
+  initialTicket,
+  isClone = false,
+}) => {
   const router = useRouter();
-  const isEditing = Boolean(initialTicket?.id);
-  const [ticketId] = useState(initialTicket?.id);
+  const isEditing = Boolean(initialTicket?.id) && !isClone;
+  const [ticketId] = useState(isClone ? undefined : initialTicket?.id);
 
   const [airlines, setAirlines] = useState<string[]>([]);
   const [ticketClasses, setTicketClasses] = useState<string[]>([]);
@@ -363,10 +376,18 @@ const FlightTicketForm: React.FC<FlightTicketFormProps> = ({ initialTicket }) =>
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-tight">
-              {isEditing ? "Edit Flight E-Ticket" : "Flight E-Ticket"}
+              {isClone
+                ? "Clone Flight E-Ticket"
+                : isEditing
+                ? "Edit Flight E-Ticket"
+                : "Flight E-Ticket"}
             </h1>
             <p className="text-blue-100 text-sm mt-0.5">
-              {isEditing ? "Update booking and passenger details" : "Enter booking and passenger details"}
+              {isClone
+                ? "Review the copied booking and save it as a new ticket"
+                : isEditing
+                ? "Update booking and passenger details"
+                : "Enter booking and passenger details"}
             </p>
           </div>
         </div>

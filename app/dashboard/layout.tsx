@@ -21,7 +21,9 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
 
-  const title = pathname.match(/\/dashboard\/tickets\/[^/]+\/edit/)
+  const title = pathname.match(/\/dashboard\/tickets\/[^/]+\/clone/)
+    ? "Clone Ticket"
+    : pathname.match(/\/dashboard\/tickets\/[^/]+\/edit/)
     ? "Edit Ticket"
     : pageTitles[pathname] || "Dashboard";
 
