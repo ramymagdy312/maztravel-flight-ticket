@@ -232,6 +232,8 @@ const FlightTicketForm: React.FC<FlightTicketFormProps> = ({
         amount: parseFloat(grandTotalAmount),
         currency: grandTotalCurrency,
       };
+    } else {
+      delete data.grandTotal;
     }
     data.showIssueDateTime = showIssueDateTime;
     data.showCompanyInfo = showCompanyInfo;
@@ -272,11 +274,13 @@ const FlightTicketForm: React.FC<FlightTicketFormProps> = ({
       return o;
     });
 
-    if (parsed.grandTotal) {
+    if (showGrandTotal && parsed.grandTotal) {
       parsed.grandTotal = {
         amount: Number(parsed.grandTotal.amount) || 0,
         currency: parsed.grandTotal.currency === "USD" ? "USD" : "EGP",
       };
+    } else {
+      delete parsed.grandTotal;
     }
     parsed.showCompanyInfo = parsed.showCompanyInfo !== false;
     return parsed;
