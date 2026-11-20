@@ -936,8 +936,9 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
           {ticket.grandTotal ? (
             <View
               wrap={false}
-              render={({ pageNumber, totalPages }) =>
-                pageNumber === totalPages ? (
+              render={(props) => {
+                const { pageNumber, totalPages } = props as typeof props & { totalPages: number };
+                return pageNumber === totalPages ? (
                   <View style={styles.totalWrap}>
                     <View style={styles.totalPill}>
                       <Text style={styles.totalLabel}>Grand total</Text>
@@ -946,8 +947,8 @@ const TicketPDF: React.FC<TicketPDFProps> = ({ ticket: ticketProp }) => {
                       </Text>
                     </View>
                   </View>
-                ) : null
-              }
+                ) : null;
+              }}
             />
           ) : null}
         </View>
