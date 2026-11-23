@@ -27,7 +27,7 @@ const NAVY_DEEP = "#071a45";
 const BLUE = "#1e4b9e";
 const GOLD = "#c9a84c";
 const MUTED = "#64748b";
-const LABEL = "#94a3b8";
+const LABEL = "#111111";
 const PAGE_W = 596;
 const HEADER_H = 94;
 
@@ -532,8 +532,12 @@ function IconPlane({ size = 11, color = NAVY }: { size?: number; color?: string 
 function IconSeat({ size = 11, color = GOLD }: { size?: number; color?: string }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24">
-      <Path d="M5 3 H9 V13 H18 C19.1 13 20 13.9 20 15 V17 H7 C5.9 17 5 16.1 5 15 Z" fill={color} />
-      <Path d="M8 17 V21 M17 17 V21" stroke={color} strokeWidth={2} strokeLinecap="round" />
+      <Path
+        d="M4.3 2.6 C5.6 2.1 7 2.8 7.4 4.1 L10.3 13 H17 C18.4 13 19.5 14.1 19.5 15.5 V16.8 H9.4 C8.4 16.8 7.5 16.2 7.2 15.2 L3.2 5.4 C2.7 4.2 3.2 3 4.3 2.6 Z"
+        fill={color}
+      />
+      <Path d="M11 10 H18.2 C18.9 10 19.4 10.5 19.4 11.1 C19.4 11.7 18.9 12.2 18.2 12.2 H11.7 Z" fill={color} />
+      <Path d="M14 16.8 V20 M10.5 21 H17.5" stroke={color} strokeWidth={2} strokeLinecap="round" />
     </Svg>
   );
 }
